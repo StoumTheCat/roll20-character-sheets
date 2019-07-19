@@ -1,0 +1,96 @@
+.sheet-main {
+    display: grid;
+    width: 800px;
+    height: 900px;
+    grid-gap: 4px;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: max-content auto auto auto auto;
+    /*grid-template-rows: 90px 1fr 1fr 1fr 20px;*/
+    grid-template-areas:
+    "logo   info    info   info"
+    "stats  stats   save   save"
+    "hitbox hitbox  wounds wounds"
+    "armor  armor   weapon weapon"
+    "footer  footer  footer  footer";
+}
+
+/*----------------- GENERAL CSS ------------------*/
+
+h1 {
+    background-color: black;
+    color: white;
+}
+
+textarea {
+    width: 90%;
+    height: 85%;
+}
+
+.sheet-section {
+    padding: 5px;
+    border-style: solid;
+}
+
+.sheet-flex-col {
+    display: flex;
+    flex-flow: column wrap;
+    /*justify-content: flex-start;*/
+}
+
+.sheet-flex-center {
+    align-items: center;
+    justify-content: center;
+}
+
+/*------------- Section-specific CSS -------------*/
+
+.sheet-info {
+    grid-area: info;
+    flex-flow: column wrap;
+    display: grid;
+    grid-gap: 4px;
+    grid-template-columns: auto auto auto auto;
+    align-items: center;
+}
+
+.sheet-info input {
+    max-height: 1.5em;
+}
+
+.sheet-info span {
+    font-weight: bold;
+}
+
+.sheet-info input[type="number"] {
+    max-width: 10px;
+}
+
+.sheet-logo {
+    grid-area: logo;
+    flex-direction: column;
+}
+
+.sheet-stats {
+    grid-area: stats;
+}
+
+.sheet-save {
+    grid-area: save;
+}
+
+.sheet-hitbox {
+    grid-area: hitbox;
+}
+
+.sheet-wounds {
+    grid-area: wounds;
+}
+
+.sheet-armor {
+    grid-area: armor;
+}
+
+.sheet-weapon {
+    grid-area: weapon;
+}
+
