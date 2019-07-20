@@ -8,7 +8,7 @@
     grid-template-rows: max-content max-content auto auto;
     grid-template-areas:
             "logo   info    info   info"
-            "stats-section  stats-section   save   save"
+            "stats-section  stats-section   stats-section   stats-section"
             "armor  armor   weapon weapon"
             "footer  footer  footer  footer";
 }
@@ -69,8 +69,9 @@ textarea {
     display: grid;
     grid-gap: 4px;
     grid-template-areas:
-            "stats"
-            "hitbox";
+            "stats stats wounds"
+            "save hitbox wounds";
+    grid-template-columns: max-content max-content max-content;
 }
 
 .sheet-stats {
@@ -131,19 +132,82 @@ div:has(.sheet-merge-input-left) {
     grid-template-rows: auto auto;
 }
 
-.sheet-hitbox-table div {
+.sheet-save {
+    display: grid;
+    grid-area: save;
+    grid-gap: 3px;
+    grid-template-areas: "save-table btm-table";
+    grid-template-columns: auto auto;
+}
+
+.sheet-save-table {
+    grid-area: save-table;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.sheet-btm-table {
+    grid-area: btm-table;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.sheet-save-table div, .sheet-btm-table div, .sheet-hitbox-table div {
     border-style:solid;
     border-width: 1px;
 }
 
-.sheet-hitbox-table input {
+.sheet-save-table input, .sheet-btm-table input, .sheet-hitbox-table input {
     border-style: none;
 }
 
-.sheet-save {
-    grid-area: save;
+/*----------- Wounds section -----------*/
+.sheet-wounds {
+    grid-area: wounds;
+    display: grid;
+    grid-gap: 3px;
+    grid-template-columns: max-content max-content max-content max-content max-content;
+    grid-template-rows: max-content max-content;
 }
 
+.sheet-wounds input[type="radio"] {
+    opacity: 0;
+    width: 16px;
+    height: 16px;
+    position: relative;
+    top: 5px;
+    left: 6px;
+    margin: -10px;
+    cursor: pointer;
+    z-index: 1;
+}
+
+/* Fake radio */
+.sheet-wounds input[type="radio"] + span::before {
+    margin-right: 4px;
+    border: solid 1px #a8a8a8;
+    line-height: 14px;
+    text-align: center;
+    display: inline-block;
+    vertical-align: middle;
+    box-shadow: 0 0 2px #ccc;
+    background: #f6f6f6;
+    background: radial-gradient(#f6f6f6, #dfdfdf);
+    content: "•";
+    width: 12px;
+    height: 12px;
+    font-size: 24px;
+    border-radius: 50%;
+}
+
+/* Remove dot from all radios _after_ selected one */
+.sheet-wounds input[type="radio"]:checked ~ input[type="radio"] + span::before {
+    content: "";
+}
+
+.sheet-wound-block:has( input[type="radio"]:checked) {
+
+}
 .sheet-armor {
     grid-area: armor;
 }
