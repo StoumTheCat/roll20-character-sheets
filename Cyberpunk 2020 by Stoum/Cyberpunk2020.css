@@ -72,6 +72,7 @@ textarea {
             "stats stats wounds"
             "save hitbox wounds";
     grid-template-columns: max-content max-content max-content;
+    grid-template-rows: max-content max-content;
 }
 
 .sheet-stats {
@@ -82,10 +83,6 @@ textarea {
     grid-template-rows: auto auto auto auto;
     align-items: center;
     justify-items: start;
-}
-
-div:has(.sheet-merge-input-left) {
-    display: inline-block;
 }
 
 .sheet-merge-input-right {
@@ -170,6 +167,12 @@ div:has(.sheet-merge-input-left) {
     grid-template-rows: max-content max-content;
 }
 
+.sheet-wounds div {
+    align-items: center;
+    justify-items: start;
+    font-weight: bold;
+}
+
 .sheet-wounds input[type="radio"] {
     opacity: 0;
     width: 16px;
@@ -184,30 +187,25 @@ div:has(.sheet-merge-input-left) {
 
 /* Fake radio */
 .sheet-wounds input[type="radio"] + span::before {
-    margin-right: 4px;
+    margin-right: 0;
     border: solid 1px #a8a8a8;
     line-height: 14px;
     text-align: center;
     display: inline-block;
     vertical-align: middle;
     box-shadow: 0 0 2px #ccc;
-    background: #f6f6f6;
-    background: radial-gradient(#f6f6f6, #dfdfdf);
-    content: "•";
-    width: 12px;
-    height: 12px;
+    background: white;
+    content: " ";
+    width: 10px;
+    height: 15px;
     font-size: 24px;
-    border-radius: 50%;
 }
 
-/* Remove dot from all radios _after_ selected one */
-.sheet-wounds input[type="radio"]:checked ~ input[type="radio"] + span::before {
-    content: "";
+.sheet-wounds input[type="radio"]:checked + span::before {
+    background: red;
+    content: " ";
 }
 
-.sheet-wound-block:has( input[type="radio"]:checked) {
-
-}
 .sheet-armor {
     grid-area: armor;
 }
