@@ -1,45 +1,62 @@
+<!--suppress ALL -->
 <div class="main">
     <div class="logo flex-col section">
         <h1>Cyberpunk 2020</h1>
         <h2>by Stoum</h2>
     </div>
-    <div class="info section">
-        <!--<div><label class="handle">Handle: </label> <input name="attr_character_handle" type="text"/></div>
-        <div><label class="role">Role: </label> <input name="attr_role" type="text" /></div>
-        <div>
-            <label class="cp">CP: </label> <input name="attr_character_points" type="number" />
-        </div>
-        <div>
-            <label class="age">Age: </label> <input type="number" name="attr_age"/>
-        </div>
-        <div>
-            <label class="gen-ip">Gen. IP: </label><input name="attr_general_ip" type="number"/>
-        </div>
-        <div>
-            <label class="rep">Rep: </label><input name="attr_reputation" type="number"/>
-        </div>-->
-        <span class="handle">Handle: </span> <input name="attr_character_handle" type="text"/>
-        <span class="role">Role: </span> <input name="attr_role" type="text" />
-        <span class="cp">CP: </span> <input name="attr_character_points" type="number" />
-        <span class="age">Age: </span> <input type="number" name="attr_age"/>
-        <span class="gen-ip">Gen. IP: </span><input name="attr_general_ip" type="number"/>
-        <span class="rep">Rep: </span><input name="attr_reputation" type="number"/>
-    </div>
-    <div class="stats section">
 
+    <div class="info section">
+        <span>Handle</span> <input name="attr_character_handle" type="text"/>
+        <span>Role</span> <input name="attr_role" type="text" />
+        <span>CP</span> <input name="attr_character_points" type="number" />
+        <span>Age</span> <input type="number" name="attr_age"/>
+        <span>Gen. IP</span><input name="attr_general_ip" type="number"/>
+        <span>Rep</span><input name="attr_reputation" type="number"/>
     </div>
+
+    <div class="stats-section section">
+        <div class="stats">
+            <span>INT</span> <div><input name="attr_intelligence" type="number"/></div>
+            <span>REF</span> <div><input name="attr_reflex" type="number" class="merge-input-right"/><input name="attr_reflex_modified" type="number" class="merge-input-left"/></div>
+            <span>TECH</span> <div><input name="attr_tech" type="number"/></div>
+            <span>COOL</span> <div><input name="attr_cool" type="number"/></div>
+            <span>ATTR</span> <div><input name="attr_attractiveness" type="number"/></div>
+            <span>LUCK</span> <div><input name="attr_luck" type="number"/></div>
+            <span>MA</span> <div><input name="attr_movement" type="number"/></div>
+            <span>BODY</span> <div><input name="attr_body" type="number"/></div>
+            <span>EMP</span> <div><input name="attr_empathy" type="number" class="merge-input-right"/><input name="attr_empathy_current" type="number" class="merge-input-left"/></div>
+            <span>Run</span> <div><input name="attr_run" type="number" class="merge-input-right"/><input name="attr_run_max" type="number" class="merge-input-left"/></div>
+            <span>Leap</span> <div><input name="attr_leap" type="number"/></div>
+            <span>Lift</span> <div><input name="attr_lift" type="number"/></div>
+        </div>
+        <div class="hitbox">
+            <span class="location">Location</span>
+            <span class="armor-sp">Armor SP</span>
+            <div class="hitbox-table">
+                <div>Head</div>
+                <div>Torso</div>
+                <div>R. Arm</div>
+                <div>L. Arm</div>
+                <div>R. Leg</div>
+                <div>L. Leg</div>
+                <div><input name="attr_head_sp" type="number"/></div>
+                <div><input name="attr_torso_sp" type="number"/></div>
+                <div><input name="attr_rarm_sp" type="number"/></div>
+                <div><input name="attr_larm_sp" type="number"/></div>
+                <div><input name="attr_rleg_sp" type="number"/></div>
+                <div><input name="attr_lleg_sp" type="number"/></div>
+            </div>
+        </div>
+    </div>
+
     <div class="save section">
 
     </div>
-    <div class="hitbox section">
 
-    </div>
-    <div class="wounds section">
-
-    </div>
     <div class="armor section">
 
     </div>
+
     <div class="weapon section">
 
     </div>

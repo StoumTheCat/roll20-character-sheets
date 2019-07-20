@@ -1,17 +1,16 @@
 .sheet-main {
     display: grid;
+    text-align: center;
     width: 800px;
     height: 900px;
     grid-gap: 4px;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    grid-template-rows: max-content auto auto auto auto;
-    /*grid-template-rows: 90px 1fr 1fr 1fr 20px;*/
+    grid-template-columns: max-content max-content max-content min-content;
+    grid-template-rows: max-content max-content auto auto;
     grid-template-areas:
-    "logo   info    info   info"
-    "stats  stats   save   save"
-    "hitbox hitbox  wounds wounds"
-    "armor  armor   weapon weapon"
-    "footer  footer  footer  footer";
+            "logo   info    info   info"
+            "stats-section  stats-section   save   save"
+            "armor  armor   weapon weapon"
+            "footer  footer  footer  footer";
 }
 
 /*----------------- GENERAL CSS ------------------*/
@@ -34,7 +33,6 @@ textarea {
 .sheet-flex-col {
     display: flex;
     flex-flow: column wrap;
-    /*justify-content: flex-start;*/
 }
 
 .sheet-flex-center {
@@ -44,25 +42,19 @@ textarea {
 
 /*------------- Section-specific CSS -------------*/
 
+/*------------- Info section -------------*/
 .sheet-info {
     grid-area: info;
-    flex-flow: column wrap;
     display: grid;
     grid-gap: 4px;
     grid-template-columns: auto auto auto auto;
     align-items: center;
 }
 
-.sheet-info input {
-    max-height: 1.5em;
-}
-
 .sheet-info span {
     font-weight: bold;
-}
-
-.sheet-info input[type="number"] {
-    max-width: 10px;
+    background-color: black;
+    color: white;
 }
 
 .sheet-logo {
@@ -70,20 +62,86 @@ textarea {
     flex-direction: column;
 }
 
-.sheet-stats {
-    grid-area: stats;
+/*------------- Stats section -------------*/
+
+.sheet-stats-section {
+    grid-area: stats-section;
+    display: grid;
+    grid-gap: 4px;
+    grid-template-areas:
+            "stats"
+            "hitbox";
 }
 
-.sheet-save {
-    grid-area: save;
+.sheet-stats {
+    grid-area: stats;
+    display: grid;
+    grid-gap: 2px;
+    grid-template-columns: max-content max-content max-content max-content max-content max-content max-content max-content;
+    grid-template-rows: auto auto auto auto;
+    align-items: center;
+    justify-items: start;
+}
+
+div:has(.sheet-merge-input-left) {
+    display: inline-block;
+}
+
+.sheet-merge-input-right {
+    display: inline-block;
+    float: left;
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.sheet-merge-input-left {
+    display: inline-block;
+    float: left;
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    border-left:0;
+}
+
+.sheet-stats-section span {
+    font-weight: bold;
 }
 
 .sheet-hitbox {
     grid-area: hitbox;
+    display: grid;
+    grid-template-areas:
+        "location hitbox-table"
+        "armor-sp hitbox-table";
 }
 
-.sheet-wounds {
-    grid-area: wounds;
+.sheet-location {
+    grid-area: location;
+}
+
+.sheet-armor-sp {
+    grid-area: armor-sp;
+}
+
+.sheet-hitbox-table {
+    grid-area: hitbox-table;
+    border-style: solid;
+    border-width: 1px;
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto;
+    grid-template-rows: auto auto;
+}
+
+.sheet-hitbox-table div {
+    border-style:solid;
+    border-width: 1px;
+}
+
+.sheet-hitbox-table input {
+    border-style: none;
+}
+
+.sheet-save {
+    grid-area: save;
 }
 
 .sheet-armor {
