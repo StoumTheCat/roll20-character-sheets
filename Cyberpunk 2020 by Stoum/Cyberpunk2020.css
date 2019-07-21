@@ -92,6 +92,13 @@ textarea {
     border-top-right-radius: 0;
 }
 
+.sheet-merge-input-middle {
+    display: inline-block;
+    float: left;
+    border-radius: 0;
+    border-left:0;
+}
+
 .sheet-merge-input-left {
     display: inline-block;
     float: left;
@@ -208,6 +215,10 @@ textarea {
 
 .sheet-armor {
     grid-area: armor;
+}
+
+.sheet-armor span {
+    font-weight: bold;
 }
 
 .sheet-weapon {
