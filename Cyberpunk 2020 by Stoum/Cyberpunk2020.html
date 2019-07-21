@@ -153,28 +153,34 @@
 
     <div class="armor section">
         <span>Armor</span>
-        <fieldset class="repeating_armor">
-            <input type="checkbox" name="attr_equiped"/>
-            <input type="text" name="attr_armor_label" placeholder="Label" class="merge-input-right"/>
-            <input type="text" name="attr_covers" placeholder="Covers" class="merge-input-middle"/>
-            <input type="number" name="attr_sp" placeholder="SP" class="merge-input-middle"/>
-            <input type="number" name="attr_ev" placeholder="EV" class="merge-input-left"/>
-        </fieldset>
+        <div class="armor-row">
+            <input class="sheet-options-flag" type="checkbox" name="attr_options-flag" checked="checked">
+            
+            <fieldset class="repeating_armor">
+                <input type="checkbox" name="attr_equiped"/>
+                <input type="text" name="attr_armor_label" placeholder="Label"/>
+                <input type="text" name="attr_covers" placeholder="Covers"/>
+                <input type="number" name="attr_sp" placeholder="SP"/>
+                <input type="number" name="attr_ev" placeholder="EV"/>
+            </fieldset>
+        </div>
     </div>
 
     <div class="weapon section">
         <span>Weapons</span>
-        <fieldset class="repeating_weapons">
-            <input type="text" name="attr_weapon_name" placeholder="Name" class="merge-input-right"/>
-            <input type="text" name="attr_weapon_type" placeholder="Type" class="merge-input-middle"/>
-            <input type="number" name="attr_weapon_accuracy" placeholder="WA" class="merge-input-middle"/>
-            <input type="text" name="attr_weapon_concealability" placeholder="CON" class="merge-input-middle"/>
-            <input type="text" name="attr_weapon_availability" placeholder="AV" class="merge-input-middle"/>
-            <input type="text" name="attr_weapon_damage" placeholder="Damage" class="merge-input-middle"/>
-            <input type="text" name="attr_weapon_ammo" placeholder="ammo" class="merge-input-middle"/>
-            <input type="number" name="attr_weapon_shots" placeholder="#SHOTS" class="merge-input-middle"/>
-            <input type="number" name="attr_weapon_rof" placeholder="ROF" class="merge-input-middle"/>
-            <input type="text" name="attr_weapon_realiability" placeholder="REL" class="merge-input-left"/>
-        </fieldset>
+        <div>
+            <fieldset class="repeating_weapons">
+                <input type="text" name="attr_weapon_name" placeholder="Name" class="merge-input-right"/>
+                <input type="text" name="attr_weapon_type" placeholder="Type" class="merge-input-middle"/>
+                <input type="number" name="attr_weapon_accuracy" placeholder="WA" class="merge-input-middle"/>
+                <input type="text" name="attr_weapon_concealability" placeholder="CON" class="merge-input-middle"/>
+                <input type="text" name="attr_weapon_availability" placeholder="AV" class="merge-input-middle"/>
+                <input type="text" name="attr_weapon_damage" placeholder="Damage" class="merge-input-middle"/>
+                <input type="text" name="attr_weapon_ammo" placeholder="ammo" class="merge-input-middle"/>
+                <input type="number" name="attr_weapon_shots" placeholder="#SHOTS" class="merge-input-middle"/>
+                <input type="number" name="attr_weapon_rof" placeholder="ROF" class="merge-input-middle"/>
+                <input type="text" name="attr_weapon_realiability" placeholder="REL" class="merge-input-left"/>
+            </fieldset>
+        </div>
     </div>
 </div>

@@ -4,7 +4,7 @@
     width: 800px;
     height: 900px;
     grid-gap: 4px;
-    grid-template-columns: max-content max-content max-content min-content;
+    grid-template-columns: min-content min-content min-content min-content;
     grid-template-rows: max-content max-content auto auto;
     grid-template-areas:
             "logo   info    info   info"
@@ -219,6 +219,20 @@ textarea {
 
 .sheet-armor span {
     font-weight: bold;
+}
+
+.sheet-armor div {
+    border: 1px solid;
+}
+
+.sheet-armor input[type="text"] {
+    max-width: 50px;
+}
+
+.repeating-armor {
+    display: grid;
+    grid-template-columns: min-content min-content min-content min-content min-content;
+    grid-template-rows: min-content;
 }
 
 .sheet-weapon {
