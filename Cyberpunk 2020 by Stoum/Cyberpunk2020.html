@@ -1,6 +1,5 @@
-<!--suppress ALL -->
 <div class="main">
-    <div class="logo flex-col section">
+    <div class="logo section">
         <h1>Cyberpunk 2020</h1>
         <h2>by Stoum</h2>
     </div>
@@ -154,14 +153,18 @@
     <div class="armor section">
         <span>Armor</span>
         <div class="armor-row">
-            <input class="sheet-options-flag" type="checkbox" name="attr_options-flag" checked="checked">
-            
             <fieldset class="repeating_armor">
-                <input type="checkbox" name="attr_equiped"/>
-                <input type="text" name="attr_armor_label" placeholder="Label"/>
-                <input type="text" name="attr_covers" placeholder="Covers"/>
-                <input type="number" name="attr_sp" placeholder="SP"/>
-                <input type="number" name="attr_ev" placeholder="EV"/>
+                <input class="options-flag" type="checkbox" name="attr_options-flag">
+                <div class="display">
+                    <input type="checkbox" name="attr_equiped"/>
+                    <input type="text" name="attr_armor_label" placeholder="Label"/>
+                    <input type="number" name="attr_sp" placeholder="SP"/>
+                </div>
+                <div class="options">
+                    <input type="checkbox" style="opacity:0" disabled="">
+                    <input type="text" name="attr_covers" placeholder="Covers"/>
+                    <input type="number" name="attr_ev" placeholder="EV"/>
+                </div>
             </fieldset>
         </div>
     </div>
@@ -170,16 +173,22 @@
         <span>Weapons</span>
         <div>
             <fieldset class="repeating_weapons">
-                <input type="text" name="attr_weapon_name" placeholder="Name" class="merge-input-right"/>
-                <input type="text" name="attr_weapon_type" placeholder="Type" class="merge-input-middle"/>
-                <input type="number" name="attr_weapon_accuracy" placeholder="WA" class="merge-input-middle"/>
-                <input type="text" name="attr_weapon_concealability" placeholder="CON" class="merge-input-middle"/>
-                <input type="text" name="attr_weapon_availability" placeholder="AV" class="merge-input-middle"/>
-                <input type="text" name="attr_weapon_damage" placeholder="Damage" class="merge-input-middle"/>
-                <input type="text" name="attr_weapon_ammo" placeholder="ammo" class="merge-input-middle"/>
-                <input type="number" name="attr_weapon_shots" placeholder="#SHOTS" class="merge-input-middle"/>
-                <input type="number" name="attr_weapon_rof" placeholder="ROF" class="merge-input-middle"/>
-                <input type="text" name="attr_weapon_realiability" placeholder="REL" class="merge-input-left"/>
+                <input class="options-flag" type="checkbox" name="attr_options-flag">
+                <div class="display">
+                    <input type="text" name="attr_weapon_name" placeholder="Name" style="width: 100px;"/>
+                    <input type="text" name="attr_weapon_type" placeholder="Type" style="width: 50px"/>
+                    <input type="number" name="attr_weapon_accuracy" placeholder="WA" />
+                    <input type="text" name="attr_weapon_damage" placeholder="Damage"  style="width: 60px;"/>
+                    <input type="number" name="attr_weapon_shots" placeholder="#SHOTS" style="width: 60px;"/>
+                </div>
+                <div class="options">
+                    <input type="text" name="attr_weapon_concealability" placeholder="CON" style="width: 40px;"/>
+                    <input type="text" name="attr_weapon_availability" placeholder="AV" style="width: 40px;"/>
+                    <input type="text" name="attr_weapon_ammo" placeholder="ammo" style="width: 40px;"/>
+                    <input type="number" name="attr_weapon_clip_capacity" placeholder="Clip" />
+                    <input type="number" name="attr_weapon_rof" placeholder="ROF" />
+                    <input type="text" name="attr_weapon_reliability" placeholder="REL"  style="width: 40px;"/>
+                </div>
             </fieldset>
         </div>
     </div>

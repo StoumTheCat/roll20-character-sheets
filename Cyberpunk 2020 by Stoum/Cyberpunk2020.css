@@ -212,7 +212,7 @@ textarea {
     background: red;
     content: " ";
 }
-
+/* ------- Armor ------ */
 .sheet-armor {
     grid-area: armor;
 }
@@ -221,20 +221,28 @@ textarea {
     font-weight: bold;
 }
 
-.sheet-armor div {
-    border: 1px solid;
+.sheet-options {
+    display: none;
+    border-top: 2px dashed gold;
 }
 
-.sheet-armor input[type="text"] {
-    max-width: 50px;
+.sheet-options-flag {
+    position: absolute;
+    top: -10%;
+    right: 0;
+    width: 18px;
+    height: 18px;
 }
 
-.repeating-armor {
-    display: grid;
-    grid-template-columns: min-content min-content min-content min-content min-content;
-    grid-template-rows: min-content;
+.sheet-options-flag:checked ~ .sheet-options {
+    display: inherit;
 }
 
+.repcontainer {
+    display: flex;
+    flex-flow: column;
+    align-items: flex-start;
+}
 .sheet-weapon {
     grid-area: weapon;
 }
