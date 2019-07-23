@@ -4,13 +4,11 @@
     width: 800px;
     height: 900px;
     grid-gap: 4px;
-    grid-template-columns: min-content min-content min-content min-content;
-    grid-template-rows: max-content max-content auto auto;
+    grid-template-columns: max-content max-content max-content max-content;
+    grid-template-rows: max-content max-content;
     grid-template-areas:
             "logo   info    info   info"
-            "stats-section  stats-section   stats-section   stats-section"
-            "armor  armor   weapon weapon"
-            "footer  footer  footer  footer";
+            "tb tb tb tb";
 }
 
 /*----------------- GENERAL CSS ------------------*/
@@ -24,6 +22,79 @@ textarea {
     width: 90%;
     height: 85%;
 }
+
+.sheet-tabs {
+    grid-area: tb;
+    display: grid;
+    grid-column-gap: 0;
+    grid-template-columns: min-content min-content min-content min-content min-content min-content min-content min-content;
+    grid-template-areas:
+            "tab-input tab-input tab-input tab-input tab-input tab-input tab-input tab-input"
+            "tab-area tab-area tab-area tab-area tab-area tab-area tab-area tab-area";
+}
+
+div.sheet-tab-content {
+    display: none;
+    grid-area: tab-area;
+}
+
+input.sheet-stats-and-equip-tab:checked ~ div.sheet-stats-and-equip-tab {
+    grid-area: tab-area;
+    display: grid;
+    grid-template-areas:
+            "stats-section  stats-section   stats-section   stats-section"
+            "armor  armor   weapon weapon";
+    grid-template-columns: max-content max-content max-content max-content;
+    grid-template-rows: max-content max-content;
+}
+
+input.sheet-tab {
+    width: 150px;
+    height: 20px;
+    position: relative;
+    margin: -1.5px;
+    cursor: pointer;
+    z-index: 1;
+}
+
+input.sheet-tab::before {
+    content: attr(title);
+    border: solid 1px #a8a8a8;
+    border-bottom-color: black;
+    text-align: center;
+    display: inline-block;
+    background: #fff;
+    background: linear-gradient(to top, #c8c8c8, #fff, #c8c8c8);
+    width: 150px;
+    height: 20px;
+    font-size: 18px;
+    position: relative;
+    top: -1px;
+}
+
+input.sheet-tab:checked::before {
+    background: #dcdcdc;
+    background: linear-gradient(to top, #fcfcfc, #dcdcdc, #fcfcfc);
+    border-bottom-color: #fff;
+}
+
+input.sheet-tab:not(:first-child) + span::before { border-left: none; }
+
+
+input.sheet-skills-tab:checked + span::before {
+    background: #dcdcdc;
+    background: linear-gradient(to top, #fcecec, #f8c8c8, #fcecec);
+    border-bottom-color: #fcecec;
+}
+
+div.sheet-tab-content {
+    border: none;
+    border-top-color: #000;
+    margin: 0;
+    padding: 0;
+}
+
+div.sheet-skills-tab { background-color: #fcecec; }
 
 .sheet-section {
     padding: 5px;

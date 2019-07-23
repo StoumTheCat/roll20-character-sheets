@@ -13,183 +13,201 @@
         <span>Rep</span><input name="attr_reputation" type="number"/>
     </div>
 
-    <div class="stats-section section">
-        <div class="stats">
-            <span>INT</span> <div><input name="attr_intelligence" type="number"/></div>
-            <span>REF</span> <div><input name="attr_reflex" type="number" class="merge-input-right"/><input name="attr_reflex_modified" type="number" class="merge-input-left"/></div>
-            <span>TECH</span> <div><input name="attr_tech" type="number"/></div>
-            <span>COOL</span> <div><input name="attr_cool" type="number"/></div>
-            <span>ATTR</span> <div><input name="attr_attractiveness" type="number"/></div>
-            <span>LUCK</span> <div><input name="attr_luck" type="number"/></div>
-            <span>MA</span> <div><input name="attr_movement" type="number"/></div>
-            <span>BODY</span> <div><input name="attr_body" type="number"/></div>
-            <span>EMP</span> <div><input name="attr_empathy" type="number" class="merge-input-right"/><input name="attr_empathy_current" type="number" class="merge-input-left"/></div>
-            <span>Run</span> <div><input name="attr_run" type="number" class="merge-input-right"/><input name="attr_run_max" type="number" class="merge-input-left"/></div>
-            <span>Leap</span> <div><input name="attr_leap" type="number"/></div>
-            <span>Lift</span> <div><input name="attr_lift" type="number"/></div>
-        </div>
-        <div class="save">
-            <div class="save-table">
-                <div>SAVE</div>
-                <div><input name="attr_save" type="number"/></div>
-            </div>
-            <div class="btm-table">
-                <div>BTM</div>
-                <div><input name="attr_btm" type="number"/></div>
-            </div>
-        </div>
-        <div class="hitbox">
-            <span class="location">Location</span>
-            <span class="armor-sp">Armor SP</span>
-            <div class="hitbox-table">
-                <div>Head</div>
-                <div>Torso</div>
-                <div>R. Arm</div>
-                <div>L. Arm</div>
-                <div>R. Leg</div>
-                <div>L. Leg</div>
-                <div><input name="attr_head_sp" type="number"/></div>
-                <div><input name="attr_torso_sp" type="number"/></div>
-                <div><input name="attr_rarm_sp" type="number"/></div>
-                <div><input name="attr_larm_sp" type="number"/></div>
-                <div><input name="attr_rleg_sp" type="number"/></div>
-                <div><input name="attr_lleg_sp" type="number"/></div>
-            </div>
-        </div>
-        <div class="wounds">
-            <div class="wounds-block">
-                <div>Light</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-            <div class="wounds-block">
-                <div>Serious</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-            <div class="wounds-block">
-                <div>Critical</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-            <div class="wounds-block">
-                <div>Mortal 0</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-            <div class="wounds-block">
-                <div>Mortal 1</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-            <div class="wounds-block">
-                <div>Mortal 2</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-            <div class="wounds-block">
-                <div>Mortal 3</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-            <div class="wounds-block">
-                <div>Mortal 4</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-            <div class="wounds-block">
-                <div>Mortal 5</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-            <div class="wounds-block">
-                <div>Mortal 6</div>
-                <div class="wounds-radio-block">
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                    <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="tabs" style="position: relative">
+        <input type="radio" name="attr_tab" title="Stats & Equip" style="grid-area: tab-input" class="tab stats-and-equip-tab" value="1" checked="checked"> <!--<span title="Stats & Equip" style="grid-area: tab-input"></span>-->
+        <input type="radio" name="attr_tab" title="Skills" style="grid-area: tab-input" class="tab skills-tab" value="2">                                                  <!--<span title="Skills" style="grid-area: tab-input"></span>-->
+        <input type="radio" name="attr_tab" title="Gear" style="grid-area: tab-input" class="tab gear-tab" value="3">                                                    <!--<span title="Gear" style="grid-area: tab-input"></span>-->
+        <input type="radio" name="attr_tab" title="Lifepath" style="grid-area: tab-input" class="tab life-path-tab" value="4">                                               <!--<span title="Life path" style="grid-area: tab-input"></span>-->
 
-    <div class="armor section">
-        <span>Armor</span>
-        <div class="armor-row">
-            <fieldset class="repeating_armor">
-                <input class="options-flag" type="checkbox" name="attr_options-flag">
-                <div class="display">
-                    <input type="checkbox" name="attr_equiped"/>
-                    <input type="text" name="attr_armor_label" placeholder="Label"/>
-                    <input type="number" name="attr_sp" placeholder="SP"/>
+        <div class="tab-content stats-and-equip-tab">
+            <div class="stats-section section">
+                <div class="stats">
+                    <span>INT</span> <div><input name="attr_intelligence" type="number"/></div>
+                    <span>REF</span> <div><input name="attr_reflex" type="number" class="merge-input-right"/><input name="attr_reflex_modified" type="number" class="merge-input-left"/></div>
+                    <span>TECH</span> <div><input name="attr_tech" type="number"/></div>
+                    <span>COOL</span> <div><input name="attr_cool" type="number"/></div>
+                    <span>ATTR</span> <div><input name="attr_attractiveness" type="number"/></div>
+                    <span>LUCK</span> <div><input name="attr_luck" type="number"/></div>
+                    <span>MA</span> <div><input name="attr_movement" type="number"/></div>
+                    <span>BODY</span> <div><input name="attr_body" type="number"/></div>
+                    <span>EMP</span> <div><input name="attr_empathy" type="number" class="merge-input-right"/><input name="attr_empathy_current" type="number" class="merge-input-left"/></div>
+                    <span>Run</span> <div><input name="attr_run" type="number" class="merge-input-right"/><input name="attr_run_max" type="number" class="merge-input-left"/></div>
+                    <span>Leap</span> <div><input name="attr_leap" type="number"/></div>
+                    <span>Lift</span> <div><input name="attr_lift" type="number"/></div>
                 </div>
-                <div class="options">
-                    <input type="checkbox" style="opacity:0" disabled="">
-                    <input type="text" name="attr_covers" placeholder="Covers"/>
-                    <input type="number" name="attr_ev" placeholder="EV"/>
+                <div class="save">
+                    <div class="save-table">
+                        <div>SAVE</div>
+                        <div><input name="attr_save" type="number"/></div>
+                    </div>
+                    <div class="btm-table">
+                        <div>BTM</div>
+                        <div><input name="attr_btm" type="number"/></div>
+                    </div>
                 </div>
-            </fieldset>
-        </div>
-    </div>
+                <div class="hitbox">
+                    <span class="location">Location</span>
+                    <span class="armor-sp">Armor SP</span>
+                    <div class="hitbox-table">
+                        <div>Head</div>
+                        <div>Torso</div>
+                        <div>R. Arm</div>
+                        <div>L. Arm</div>
+                        <div>R. Leg</div>
+                        <div>L. Leg</div>
+                        <div><input name="attr_head_sp" type="number"/></div>
+                        <div><input name="attr_torso_sp" type="number"/></div>
+                        <div><input name="attr_rarm_sp" type="number"/></div>
+                        <div><input name="attr_larm_sp" type="number"/></div>
+                        <div><input name="attr_rleg_sp" type="number"/></div>
+                        <div><input name="attr_lleg_sp" type="number"/></div>
+                    </div>
+                </div>
+                <div class="wounds">
+                    <div class="wounds-block">
+                        <div>Light</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                    <div class="wounds-block">
+                        <div>Serious</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                    <div class="wounds-block">
+                        <div>Critical</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                    <div class="wounds-block">
+                        <div>Mortal 0</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                    <div class="wounds-block">
+                        <div>Mortal 1</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                    <div class="wounds-block">
+                        <div>Mortal 2</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                    <div class="wounds-block">
+                        <div>Mortal 3</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                    <div class="wounds-block">
+                        <div>Mortal 4</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                    <div class="wounds-block">
+                        <div>Mortal 5</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                    <div class="wounds-block">
+                        <div>Mortal 6</div>
+                        <div class="wounds-radio-block">
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                            <input type="radio" class="wound-radio" name="attr_wounds"/><span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <div class="weapon section">
-        <span>Weapons</span>
-        <div>
-            <fieldset class="repeating_weapons">
-                <input class="options-flag" type="checkbox" name="attr_options-flag">
-                <div class="display">
-                    <input type="text" name="attr_weapon_name" placeholder="Name" style="width: 100px;"/>
-                    <input type="text" name="attr_weapon_type" placeholder="Type" style="width: 50px"/>
-                    <input type="number" name="attr_weapon_accuracy" placeholder="WA" />
-                    <input type="text" name="attr_weapon_damage" placeholder="Damage"  style="width: 60px;"/>
-                    <input type="number" name="attr_weapon_shots" placeholder="#SHOTS" style="width: 60px;"/>
+            <div class="armor section">
+                <span>Armor</span>
+                <div class="armor-row">
+                    <fieldset class="repeating_armor">
+                        <input class="options-flag" type="checkbox" name="attr_options-flag">
+                        <div class="display">
+                            <input type="checkbox" name="attr_equiped"/>
+                            <input type="text" name="attr_armor_label" placeholder="Label"/>
+                            <input type="number" name="attr_sp" placeholder="SP"/>
+                        </div>
+                        <div class="options">
+                            <input type="checkbox" style="opacity:0" disabled="">
+                            <input type="text" name="attr_covers" placeholder="Covers"/>
+                            <input type="number" name="attr_ev" placeholder="EV"/>
+                        </div>
+                    </fieldset>
                 </div>
-                <div class="options">
-                    <input type="text" name="attr_weapon_concealability" placeholder="CON" style="width: 40px;"/>
-                    <input type="text" name="attr_weapon_availability" placeholder="AV" style="width: 40px;"/>
-                    <input type="text" name="attr_weapon_ammo" placeholder="ammo" style="width: 40px;"/>
-                    <input type="number" name="attr_weapon_clip_capacity" placeholder="Clip" />
-                    <input type="number" name="attr_weapon_rof" placeholder="ROF" />
-                    <input type="text" name="attr_weapon_reliability" placeholder="REL"  style="width: 40px;"/>
+            </div>
+
+            <div class="weapon section">
+                <span>Weapons</span>
+                <div>
+                    <fieldset class="repeating_weapons">
+                        <input class="options-flag" type="checkbox" name="attr_options-flag">
+                        <div class="display">
+                            <input type="text" name="attr_weapon_name" placeholder="Name" style="width: 100px;"/>
+                            <input type="text" name="attr_weapon_type" placeholder="Type" style="width: 50px"/>
+                            <input type="number" name="attr_weapon_accuracy" placeholder="WA" />
+                            <input type="text" name="attr_weapon_damage" placeholder="Damage"  style="width: 60px;"/>
+                            <input type="number" name="attr_weapon_shots" placeholder="#SHOTS" style="width: 60px;"/>
+                        </div>
+                        <div class="options">
+                            <input type="text" name="attr_weapon_concealability" placeholder="CON" style="width: 40px;"/>
+                            <input type="text" name="attr_weapon_availability" placeholder="AV" style="width: 40px;"/>
+                            <input type="text" name="attr_weapon_ammo" placeholder="ammo" style="width: 40px;"/>
+                            <input type="number" name="attr_weapon_clip_capacity" placeholder="Clip" />
+                            <input type="number" name="attr_weapon_rof" placeholder="ROF" />
+                            <input type="text" name="attr_weapon_reliability" placeholder="REL"  style="width: 40px;"/>
+                        </div>
+                    </fieldset>
                 </div>
-            </fieldset>
+            </div>
+        </div>
+        <div class="tab-content skills-tab">
+1
+        </div>
+        <div class="tab-content gear-tab">
+
+        </div>
+        <div class="tab-content life-path-tab">
+
         </div>
     </div>
 </div>
