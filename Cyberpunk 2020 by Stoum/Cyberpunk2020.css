@@ -34,12 +34,10 @@ textarea {
 
 div.sheet-tab-content {
     display: none;
-    grid-area: tab-area;
 }
 
 input.sheet-stats-and-equip-tab:checked ~ div.sheet-stats-and-equip-tab {
     grid-area: tab-area;
-    width: 800px;
     display: grid;
     grid-template-areas:
             "stats-section  stats-section   stats-section   stats-section"
@@ -76,15 +74,6 @@ input.sheet-tab:checked::before {
     background: #dcdcdc;
     background: linear-gradient(to top, #fcfcfc, #dcdcdc, #fcfcfc);
     border-bottom-color: #fff;
-}
-
-input.sheet-tab:not(:first-child) + span::before { border-left: none; }
-
-
-input.sheet-skills-tab:checked + span::before {
-    background: #dcdcdc;
-    background: linear-gradient(to top, #fcecec, #f8c8c8, #fcecec);
-    border-bottom-color: #fcecec;
 }
 
 div.sheet-tab-content {
@@ -319,5 +308,65 @@ div.sheet-skills-tab { background-color: #fcecec; }
 .sheet-weapon {
     grid-area: weapon;
     border-top: none;
+}
+
+input.sheet-skills-tab:checked ~ div.sheet-skills-tab {
+    grid-area: tab-area;
+    display: grid;
+    grid-template-areas: "skills";
+    grid-template-columns: max-content;
+    grid-template-rows: max-content;
+}
+
+.sheet-skills {
+    grid-area: skills;
+    display: grid;
+    grid-gap: 5px;
+    grid-template-columns: auto auto auto auto;
+}
+
+.sheet-skills-table-column {
+    width: 200px;
+}
+
+button[type="roll"].sheet-skill-btn {
+    background-color: transparent;
+    color: black;
+    border: none;
+    font-size: 12px!important;
+    line-height: 12px;
+    background-image: none;
+    text-shadow: none;
+    box-shadow: none;
+    padding: 0px;
+    margin: 0px;
+    width: 100%;
+}
+
+button[type="roll"].sheet-skill-btn:focus {
+    outline: none;
+}
+
+div.sheet-skill-row {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+div.sheet-skill-row div:first-child {
+    justify-self: left;
+}
+
+div.sheet-skill-row div:last-child {
+    justify-self: right;
+    position: relative;
+    left:-20px;
+}
+
+button.sheet-skill-btn::before {
+    content: ""!important;
+}
+
+button[type="roll"]:hover {
+    color: red;
 }
 

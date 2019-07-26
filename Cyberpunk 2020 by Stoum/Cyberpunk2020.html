@@ -27,7 +27,7 @@
                     <span>TECH</span> <div><input name="attr_tech" type="number"/></div>
                     <span>COOL</span> <div><input name="attr_cool" type="number"/></div>
                     <span>ATTR</span> <div><input name="attr_attractiveness" type="number"/></div>
-                    <span>LUCK</span> <div><input name="attr_luck" type="number"/></div>
+                    <span>LUCK</span> <div><input name="attr_luck" type="number" class="merge-input-right"/><input name="attr_luck_max" type="number" class="merge-input-left"/></div>
                     <span>MA</span> <div><input name="attr_movement" type="number"/></div>
                     <span>BODY</span> <div><input name="attr_body" type="number"/></div>
                     <span>EMP</span> <div><input name="attr_empathy" type="number" class="merge-input-right"/><input name="attr_empathy_current" type="number" class="merge-input-left"/></div>
@@ -201,7 +201,117 @@
             </div>
         </div>
         <div class="tab-content skills-tab">
-1
+            <div class="skills section">
+                <div class="skills-table-column">
+                    <div class="skill-row">SPECIAL ABILITIES</div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Cool} + @{Authority}" class="skill-btn">Authority</button></div><div><input type="number" class="skill-input" name="attr_Authority"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Cool} + @{Leadership}" class="skill-btn">Charismatic Leadership</button></div><div><input type="number" class="skill-input" name="attr_Leadership"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Combat-sense}" class="skill-btn">Combat Sense</button></div><div><input type="number" class="skill-input" name="attr_combat-sense"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Credibility}" class="skill-btn">Credibility</button></div><div><input type="number" class="skill-input" name="attr_Credibility"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Family}" class="skill-btn">Family</button></div><div><input type="number" class="skill-input" name="attr_Family"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Interface}" class="skill-btn">Interface</button></div><div><input type="number" class="skill-input" name="attr_Interface"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll @{rig}d6" class="skill-btn">Jury Rig</button></div><div><input type="number" class="skill-input" name="attr_rig"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{medtech}" class="skill-btn">Medical Tech</button></div><div><input type="number" class="skill-input" name="attr_medtech"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Resources}" class="skill-btn">Resources</button></div><div><input type="number" class="skill-input" name="attr_Resources"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Cool} + @{Streetdeal}" class="skill-btn">Streetdeal</button></div><div><input type="number" class="skill-input" name="attr_Streetdeal"/></div> </div>
+                    <div class="skill-row">ATTR</div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{attractiveness} + @{grooming}" class="skill-btn">Personal Grooming</button></div><div><input type="number" class="skill-input" name="attr_grooming"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{attractiveness} + @{style}" class="skill-btn">Wardrobe & Style</button></div><div><input type="number" class="skill-input" name="attr_style"/></div> </div>
+                    <div class="skill-row">BODY</div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{body} + @{Endurance}" class="skill-btn">Endurance</button></div><div><input type="number" class="skill-input" name="attr_Endurance"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{body} + @{strfeat}" class="skill-btn">Strength Feat</button></div><div><input type="number" class="skill-input" name="attr_strfeat"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{body} + @{Swimming}" class="skill-btn">Swimming</button></div><div><input type="number" class="skill-input" name="attr_Swimming"/></div> </div>
+                    <div class="skill-row">COOL/WILL</div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Cool} + @{Interrogation}" class="skill-btn">Interrogation</button></div><div><input type="number" class="skill-input" name="attr_Interrogation"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Cool} + @{Intimidate}" class="skill-btn">Intimidate</button></div><div><input type="number" class="skill-input" name="attr_Intimidate"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Cool} + @{Oratory}" class="skill-btn">Oratory</button></div><div><input type="number" class="skill-input" name="attr_Oratory"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Cool} + @{Resist}" class="skill-btn">Resist Torture/Drugs</button></div><div><input type="number" class="skill-input" name="attr_Resist"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Cool} + @{Streetwise}" class="skill-btn">Streetwise</button></div><div><input type="number" class="skill-input" name="attr_Streetwise"/></div> </div>
+                </div>
+                <div class="skills-table-column">
+                    <div class="skill-row">INT</div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{anthropology}" class="skill-btn">Anthropology</button></div><div><input type="number" class="skill-input" name="attr_anthropology"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Awareness}" class="skill-btn">Awareness/Notice</button></div><div><input type="number" class="skill-input" name="attr_Awareness"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Biology}" class="skill-btn">Biology</button></div><div><input type="number" class="skill-input" name="attr_Biology"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Botany}" class="skill-btn">Botany</button></div><div><input type="number" class="skill-input" name="attr_Botany"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Chemistry}" class="skill-btn">Chemistry</button></div><div><input type="number" class="skill-input" name="attr_Chemistry"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Composition}" class="skill-btn">Composition</button></div><div><input type="number" class="skill-input" name="attr_Composition"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Diagnose}" class="skill-btn">Diagnose Illness</button></div><div><input type="number" class="skill-input" name="attr_Diagnose"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Education}" class="skill-btn">Education & Gen Know</button></div><div><input type="number" class="skill-input" name="attr_Education"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Expert}" class="skill-btn">Expert</button></div><div><input type="number" class="skill-input" name="attr_Expert"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Gamble}" class="skill-btn">Gamble</button></div><div><input type="number" class="skill-input" name="attr_Gamble"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Accounting}" class="skill-btn">Accounting</button></div><div><input type="number" class="skill-input" name="attr_Accounting"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Geology}" class="skill-btn">Geology</button></div><div><input type="number" class="skill-input" name="attr_Geology"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Hide}" class="skill-btn">Hide/Evade</button></div><div><input type="number" class="skill-input" name="attr_Hide"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{History}" class="skill-btn">History</button></div><div><input type="number" class="skill-input" name="attr_History"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Language}" class="skill-btn">Language</button></div><div><input type="number" class="skill-input" name="attr_Language"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Library}" class="skill-btn">Library Search</button></div><div><input type="number" class="skill-input" name="attr_Library"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Mathematics}" class="skill-btn">Mathematics</button></div><div><input type="number" class="skill-input" name="attr_Mathematics"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Physics}" class="skill-btn">Physics</button></div><div><input type="number" class="skill-input" name="attr_Physics"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Programming}" class="skill-btn">Programming</button></div><div><input type="number" class="skill-input" name="attr_Programming"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Shadow}" class="skill-btn">Shadow/Track</button></div><div><input type="number" class="skill-input" name="attr_Shadow"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Stock}" class="skill-btn">Stock Market</button></div><div><input type="number" class="skill-input" name="attr_Stock"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{System}" class="skill-btn">System Knowledge</button></div><div><input type="number" class="skill-input" name="attr_System"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Teaching}" class="skill-btn">Teaching</button></div><div><input type="number" class="skill-input" name="attr_Teaching"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Wilderness}" class="skill-btn">Wilderness Survival</button></div><div><input type="number" class="skill-input" name="attr_Wilderness"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Intelligence} + @{Zoology}" class="skill-btn">Zoology</button></div><div><input type="number" class="skill-input" name="attr_Zoology"/></div> </div>
+                </div>
+                <div class="skills-table-column">
+                    <div class="skill-row">REF</div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Archery}" class="skill-btn">Archery</button></div><div><input type="number" class="skill-input" name="attr_Archery"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Athletics}" class="skill-btn">Athletics</button></div><div><input type="number" class="skill-input" name="attr_Athletics"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Brawling}" class="skill-btn">Brawling</button></div><div><input type="number" class="skill-input" name="attr_Brawling"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Dance}" class="skill-btn">Dance</button></div><div><input type="number" class="skill-input" name="attr_Dance"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Dodge}" class="skill-btn">Dodge & Escape</button></div><div><input type="number" class="skill-input" name="attr_Dodge"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Driving}" class="skill-btn">Driving</button></div><div><input type="number" class="skill-input" name="attr_Driving"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Fencing}" class="skill-btn">Fencing</button></div><div><input type="number" class="skill-input" name="attr_Fencing"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Handgun}" class="skill-btn">Handgun</button></div><div><input type="number" class="skill-input" name="attr_Handgun"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Heavy}" class="skill-btn">Heavy Weapons</button></div><div><input type="number" class="skill-input" name="attr_Heavy"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Martial}" class="skill-btn">Martial Art 1</button></div><div><input type="number" class="skill-input" name="attr_Martial"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Melee}" class="skill-btn">Melee</button></div><div><input type="number" class="skill-input" name="attr_Melee"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Motorcycle}" class="skill-btn">Motorcycle</button></div><div><input type="number" class="skill-input" name="attr_Motorcycle"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Gyro}" class="skill-btn">Pilot (Gyro)</button></div><div><input type="number" class="skill-input" name="attr_Gyro"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{FixedWing}" class="skill-btn">Pilot (Fixed Wing)</button></div><div><input type="number" class="skill-input" name="attr_FixedWing"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Dirigible}" class="skill-btn">Pilot (Dirigible)</button></div><div><input type="number" class="skill-input" name="attr_Dirigible"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Thrust}" class="skill-btn">Pilot (Vect.Thrust Vehicle)</button></div><div><input type="number" class="skill-input" name="attr_Thrust"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Rifle}" class="skill-btn">Rifle</button></div><div><input type="number" class="skill-input" name="attr_Rifle"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Stealth}" class="skill-btn">Stealth</button></div><div><input type="number" class="skill-input" name="attr_Stealth"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Submachinegun}" class="skill-btn">Submachinegun</button></div><div><input type="number" class="skill-input" name="attr_Submachinegun"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Reflex} + @{Machinery}" class="skill-btn">Operate Hvy. Machinery</button></div><div><input type="number" class="skill-input" name="attr_Machinery"/></div> </div>
+                    <div class="skill-row">EMPATHY</div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Empathy} + @{Perception}" class="skill-btn">Human Perception</button></div><div><input type="number" class="skill-input" name="attr_Perception"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Empathy} + @{Interview}" class="skill-btn">Interview</button></div><div><input type="number" class="skill-input" name="attr_Interview"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Empathy} + @{Leadership}" class="skill-btn">Leadership</button></div><div><input type="number" class="skill-input" name="attr_Leadership"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Empathy} + @{Seduction}" class="skill-btn">Seduction</button></div><div><input type="number" class="skill-input" name="attr_Seduction"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Empathy} + @{Social}" class="skill-btn">Social</button></div><div><input type="number" class="skill-input" name="attr_Social"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Empathy} + @{Persuasion}" class="skill-btn">Persuasion & Fast Talk</button></div><div><input type="number" class="skill-input" name="attr_Persuasion"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Empathy} + @{Perform}" class="skill-btn">Perform</button></div><div><input type="number" class="skill-input" name="attr_Perform"/></div> </div>
+                </div>
+                <div class="skills-table-column">
+                    <div class="skill-row">TECH</div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Aero}" class="skill-btn">Aero Tech</button></div><div><input type="number" class="skill-input" name="attr_Aero"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{AV}" class="skill-btn">AV Tech</button></div><div><input type="number" class="skill-input" name="attr_AV"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Basic}" class="skill-btn">Basic Tech</button></div><div><input type="number" class="skill-input" name="attr_Basic"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Cryotank}" class="skill-btn">Cryotank Operation</button></div><div><input type="number" class="skill-input" name="attr_Cryotank"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Cyberdeck}" class="skill-btn">Cyberdeck Design</button></div><div><input type="number" class="skill-input" name="attr_Cyberdeck"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Cyber}" class="skill-btn">Cyber Tech</button></div><div><input type="number" class="skill-input" name="attr_Cyber"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Demolitions}" class="skill-btn">Demolitions</button></div><div><input type="number" class="skill-input" name="attr_Demolitions"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Disguise}" class="skill-btn">Disguise</button></div><div><input type="number" class="skill-input" name="attr_Disguise"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Electronics}" class="skill-btn">Electronics</button></div><div><input type="number" class="skill-input" name="attr_Electronics"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Security}" class="skill-btn">Elect. Security</button></div><div><input type="number" class="skill-input" name="attr_Security"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{FirstAid}" class="skill-btn">First Aid</button></div><div><input type="number" class="skill-input" name="attr_FirstAid"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Forgery}" class="skill-btn">Forgery</button></div><div><input type="number" class="skill-input" name="attr_Forgery"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Gyro}" class="skill-btn">Gyro Tech</button></div><div><input type="number" class="skill-input" name="attr_Gyro"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Paint}" class="skill-btn">Paint or Draw</button></div><div><input type="number" class="skill-input" name="attr_Paint"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Photo}" class="skill-btn">Photo & Film</button></div><div><input type="number" class="skill-input" name="attr_Photo"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Pharmacuticals}" class="skill-btn">Pharmacuticals</button></div><div><input type="number" class="skill-input" name="attr_Pharmacuticals"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{PickLock}" class="skill-btn">Pick Lock</button></div><div><input type="number" class="skill-input" name="attr_PickLock"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{PickPocket}" class="skill-btn">Pick Pocket</button></div><div><input type="number" class="skill-input" name="attr_PickPocket"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Instrument}" class="skill-btn">Play Instrument</button></div><div><input type="number" class="skill-input" name="attr_Instrument"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Weaponsmith}" class="skill-btn">Weaponsmith</button></div><div><input type="number" class="skill-input" name="attr_Weaponsmith"/></div> </div>
+                    <div class="skill-row"><div><button type="roll" value="/roll 1d10 + @{Tech} + @{Weapons}" class="skill-btn">Weapons Tech</button></div><div><input type="number" class="skill-input" name="attr_Weapons"/></div> </div>
+                </div>
+            </div>
         </div>
         <div class="tab-content gear-tab">
 
