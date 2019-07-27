@@ -4,11 +4,17 @@
     width: 800px;
     height: 900px;
     grid-gap: 4px;
-    grid-template-columns: min-content min-content min-content min-content;
+    grid-template-columns: auto auto auto auto;
     grid-template-rows: max-content max-content;
     grid-template-areas:
-            "logo   info    info   info"
+            "hd hd hd hd"
             "tb tb tb tb";
+}
+
+.sheet-header-section {
+    display: grid;
+    width: 800px;
+    grid-template-areas: "logo   info    info   info"
 }
 
 /*----------------- GENERAL CSS ------------------*/
@@ -26,7 +32,7 @@ textarea {
 .sheet-tabs {
     grid-area: tb;
     display: grid;
-    grid-template-columns: min-content min-content min-content min-content max-content max-content max-content max-content;
+    grid-template-columns: min-content min-content min-content min-content auto auto auto auto;
     grid-template-areas:
             "tab-input tab-input tab-input tab-input tab-input tab-input tab-input tab-input"
             "tab-area tab-area tab-area tab-area tab-area tab-area tab-area tab-area";
@@ -36,15 +42,40 @@ div.sheet-tab-content {
     display: none;
 }
 
+input.sheet-gear-tab:checked ~ div.sheet-gear-tab {
+    grid-area: tab-area;
+    width: 800px;
+    display: grid;
+    grid-template-areas:
+            "gear cyber";
+    grid-template-columns: auto auto;
+}
+
+input.sheet-life-path-tab:checked ~ div.sheet-life-path-tab {
+    grid-area: tab-area;
+    width: 800px;
+    display: grid;
+}
+
+.sheet-gear {
+    grid-area: gear;
+    border-right-width: 0;
+}
+
+.sheet-cyber {
+    grid-area: cyber;
+}
+
 input.sheet-stats-and-equip-tab:checked ~ div.sheet-stats-and-equip-tab {
     grid-area: tab-area;
     display: grid;
     grid-template-areas:
             "stats-section  stats-section   stats-section   stats-section"
             "armor  armor   weapon weapon";
-    grid-template-columns: max-content max-content max-content max-content;
+    grid-template-columns: auto auto auto auto;
     grid-template-rows: max-content max-content;
 }
+
 
 input.sheet-tab {
     width: 150px;
@@ -288,7 +319,7 @@ div.sheet-skills-tab { background-color: #fcecec; }
     border-top: 2px dashed gold;
 }
 
-.sheet-options-flag {
+input.sheet-options-flag {
     position: absolute;
     top: -10%;
     right: 0;
@@ -296,7 +327,7 @@ div.sheet-skills-tab { background-color: #fcecec; }
     height: 18px;
 }
 
-.sheet-options-flag:checked ~ .sheet-options {
+input.sheet-options-flag:checked ~ .sheet-options {
     display: inherit;
 }
 
@@ -349,17 +380,23 @@ button[type="roll"].sheet-skill-btn:focus {
 
 div.sheet-skill-row {
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: 100px auto auto;
 }
 
 div.sheet-skill-row div:first-child {
     justify-self: left;
 }
 
-div.sheet-skill-row div:last-child {
+div.sheet-skill-row div:nth-child(3) {
+    justify-self: left;
+}
+div.sheet-skill-row div:nth-child(2) {
     justify-self: right;
-    position: relative;
-    left:-20px;
+}
+
+div.sheet-skill-row.sheet-header div{
+    justify-self: center;
+    font-weight: bold;
 }
 
 button.sheet-skill-btn::before {
