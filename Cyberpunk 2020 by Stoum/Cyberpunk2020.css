@@ -358,7 +358,7 @@ input.sheet-skills-tab:checked ~ div.sheet-skills-tab {
     width: 200px;
 }
 
-button[type="roll"].sheet-skill-btn {
+button[type="roll"].sheet-skill-btn, button[type="action"] {
     background-color: transparent;
     color: black;
     border: none;
@@ -372,9 +372,19 @@ button[type="roll"].sheet-skill-btn {
     width: 100%;
 }
 
-button[type="roll"].sheet-skill-btn:focus {
+button[type="action"] {
+    font-weight: bold;
+}
+
+button[type="roll"].sheet-skill-btn:focus, button[type="action"]:focus {
     outline: none;
 }
+
+
+button[type="roll"]:hover, button[type="action"]:hover {
+    color: red;
+}
+
 
 div.sheet-skill-row {
     display: grid;
@@ -399,9 +409,5 @@ div.sheet-skill-row.sheet-header div{
 
 button.sheet-skill-btn::before {
     content: ""!important;
-}
-
-button[type="roll"]:hover {
-    color: red;
 }
 

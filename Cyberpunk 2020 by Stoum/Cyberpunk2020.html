@@ -1,6 +1,6 @@
 <div class="main">
     <script type="text/worker">
-on("sheet:opened", function() {
+on("change:movement change:body", function() {
     getAttrs(["movement", "body"], function(values) {
         console.log(values);
         let mv = values.movement*3;
@@ -23,7 +23,7 @@ on("sheet:opened", function() {
     });
 });
 
-on("sheet:opened change:repeating_armor", function(eventInfo){
+on("clicked:recalc-sp", function(eventInfo){
     console.log(eventInfo);
     getAttrs(["_reporder_repeating_armor"], function(values){
         console.log(values);
@@ -59,8 +59,77 @@ on("sheet:opened change:repeating_armor", function(eventInfo){
     });
 });
 
+on("sheet:opened", function calculateRefMod() {
+    getAttrs(["_reporder_repeating_armor", "_reporder_repeating_gear", "_reporder_repeating_cyber"], function(values) {
+        console.log(values);
+        let items = values._reporder_repeating_armor.split(",");
+        let armorEvAttrs = [];
+        let gearModAttrs = [];
+        let cyberModAttrs = [];
+        items.forEach(function (id) {
+            armorEvAttrs.push(repAttrName("armor", id, "ev"));
+        });
+
+        items = values._reporder_repeating_gear.split(",");
+        items.forEach(function (id) {
+            gearModAttrs.push(repAttrName("gear", id, "gear_mods"));
+        });
+
+        items = values._reporder_repeating_cyber.split(",");
+        items.forEach(function (id) {
+            cyberModAttrs.push(repAttrName("cyber", id, "cyber_mods"));
+        });
+
+        let allAttrs = [];
+        Array.prototype.push.apply(allAttrs, armorEvAttrs);
+        Array.prototype.push.apply(allAttrs, gearModAttrs);
+        Array.prototype.push.apply(allAttrs, cyberModAttrs);
+        allAttrs.push("reflex");
+
+        getAttrs(allAttrs, function(attrList) {
+            let totalRefMod;
+            let totalEv = 0;
+            let totalGearMod = 0;
+            let totalCyberMod = 0;
+            let i;
+            for(i = 0; i < armorEvAttrs.length;) {
+                totalEv += attrList[allAttrs[i++]]*1;
+            }
+
+            for(; i < armorEvAttrs.length + gearModAttrs.length;) {
+                let mods = parseMods(attrList[allAttrs[i++]]);
+                totalGearMod += mods.ref;
+            }
+
+            for(; i < armorEvAttrs.length + gearModAttrs.length + cyberModAttrs.length;) {
+                let mods = parseMods(attrList[allAttrs[i++]]);
+                totalCyberMod += mods.ref;
+            }
+
+            totalRefMod = -totalEv + totalGearMod + totalCyberMod;
+
+            setAttrs({
+                reflex_modified: attrList.reflex*1 + totalRefMod
+            });
+        })
+    });
+});
+
 function repAttrName(section, id, attr) {
     return "repeating_"+section+"_"+id+"_"+attr;
+}
+
+function parseMods(mods){
+    mods = mods.split(",").map(mod => mod.trim());
+    let result = {};
+    mods.forEach(function(mod){
+        mod = mod.split(" ");
+        let value = mod[0];
+        let attr = mod[1];
+        result[attr] = value*1;
+    });
+
+    return result;
 }
 
 </script>
@@ -95,8 +164,11 @@ function repAttrName(section, id, attr) {
                     <span>INT</span>
                     <div><input name="attr_intelligence" type="number"/></div>
                     <span>REF</span>
-                    <div><input name="attr_reflex" type="number" class="merge-input-right"/><input
-                            name="attr_reflex_modified" type="number" class="merge-input-left"/></div>
+                    <div>
+                        <input name="attr_reflex_mod" hidden/>
+                        <input name="attr_reflex_modified" type="number" class="merge-input-right"/>
+                        <input name="attr_reflex" type="number" class="merge-input-left"/>
+                    </div>
                     <span>TECH</span>
                     <div><input name="attr_tech" type="number"/></div>
                     <span>COOL</span>
@@ -113,8 +185,7 @@ function repAttrName(section, id, attr) {
                     <span>BODY</span>
                     <div><input name="attr_body" type="number"/></div>
                     <span>EMP</span>
-                    <div><input name="attr_empathy" type="number" class="merge-input-right"/><input
-                            name="attr_empathy_current" type="number" class="merge-input-left"/></div>
+                    <div><input name="attr_empathy_current" type="number" class="merge-input-right"/><input name="attr_empathy_max" type="number" class="merge-input-left"/></div>
                     <span>Run</span>
                     <div><input name="attr_run" type="number" class="merge-input-right"/><input name="attr_run_max"
                                                                                                 type="number"
@@ -137,7 +208,7 @@ function repAttrName(section, id, attr) {
                 </div>
                 <div class="hitbox">
                     <span class="location">Location</span>
-                    <span class="armor-sp">Armor SP</span>
+                    <button type="action" name="act_recalc-sp" class="armor-sp">Armor SP</button>
                     <div class="hitbox-table">
                         <div>Head</div>
                         <div>Torso</div>
