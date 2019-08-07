@@ -358,7 +358,7 @@ input.sheet-skills-tab:checked ~ div.sheet-skills-tab {
     width: 200px;
 }
 
-button[type="roll"].sheet-skill-btn, button[type="action"] {
+button[type="roll"].sheet-roll-btn, button[type="action"] {
     background-color: transparent;
     color: black;
     border: none;
@@ -376,7 +376,7 @@ button[type="action"] {
     font-weight: bold;
 }
 
-button[type="roll"].sheet-skill-btn:focus, button[type="action"]:focus {
+button[type="roll"].sheet-roll-btn:focus, button[type="action"]:focus {
     outline: none;
 }
 
@@ -407,7 +407,7 @@ div.sheet-skill-row.sheet-header div{
     font-weight: bold;
 }
 
-button.sheet-skill-btn::before {
+button.sheet-roll-btn::before {
     content: ""!important;
 }
 

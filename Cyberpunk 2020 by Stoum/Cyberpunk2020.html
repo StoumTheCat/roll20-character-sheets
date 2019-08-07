@@ -25,9 +25,8 @@ on("change:movement change:body", function() {
 
 on("clicked:recalc-sp", function(eventInfo){
     console.log(eventInfo);
-    getAttrs(["_reporder_repeating_armor"], function(values){
-        console.log(values);
-        let items = values._reporder_repeating_armor.split(",");
+    getSectionIDs("armor", function(items){
+        console.log(items);
         let armor = {head: 0, torso: 0, legs: 0, arms: 0};
         let armorPieces = [];
         items.forEach(function(id){
@@ -59,60 +58,60 @@ on("clicked:recalc-sp", function(eventInfo){
     });
 });
 
-on("sheet:opened", function calculateRefMod() {
-    getAttrs(["_reporder_repeating_armor", "_reporder_repeating_gear", "_reporder_repeating_cyber"], function(values) {
-        console.log(values);
-        let items = values._reporder_repeating_armor.split(",");
-        let armorEvAttrs = [];
-        let gearModAttrs = [];
-        let cyberModAttrs = [];
-        items.forEach(function (id) {
-            armorEvAttrs.push(repAttrName("armor", id, "ev"));
-        });
+on("change:ev_sum change:gear_all_mods change:cyber_all_mods", function () {
+    getAttrs(["ev_sum", "gear_all_mods", "cyber_all_mods", "reflex"], function(values){
+        let ev_sum = values.ev_sum*-1;
+        let gear_mods = JSON.parse(values.gear_all_mods);
+        let cyber_mods = JSON.parse(values.cyber_all_mods);
 
-        items = values._reporder_repeating_gear.split(",");
-        items.forEach(function (id) {
-            gearModAttrs.push(repAttrName("gear", id, "gear_mods"));
-        });
-
-        items = values._reporder_repeating_cyber.split(",");
-        items.forEach(function (id) {
-            cyberModAttrs.push(repAttrName("cyber", id, "cyber_mods"));
-        });
-
-        let allAttrs = [];
-        Array.prototype.push.apply(allAttrs, armorEvAttrs);
-        Array.prototype.push.apply(allAttrs, gearModAttrs);
-        Array.prototype.push.apply(allAttrs, cyberModAttrs);
-        allAttrs.push("reflex");
-
-        getAttrs(allAttrs, function(attrList) {
-            let totalRefMod;
-            let totalEv = 0;
-            let totalGearMod = 0;
-            let totalCyberMod = 0;
-            let i;
-            for(i = 0; i < armorEvAttrs.length;) {
-                totalEv += attrList[allAttrs[i++]]*1;
-            }
-
-            for(; i < armorEvAttrs.length + gearModAttrs.length;) {
-                let mods = parseMods(attrList[allAttrs[i++]]);
-                totalGearMod += mods.ref;
-            }
-
-            for(; i < armorEvAttrs.length + gearModAttrs.length + cyberModAttrs.length;) {
-                let mods = parseMods(attrList[allAttrs[i++]]);
-                totalCyberMod += mods.ref;
-            }
-
-            totalRefMod = -totalEv + totalGearMod + totalCyberMod;
-
-            setAttrs({
-                reflex_modified: attrList.reflex*1 + totalRefMod
-            });
+        setAttrs({
+            reflex_modified: values.reflex*1 + ev_sum + gear_mods.ref + cyber_mods.ref
         })
-    });
+    })
+});
+
+on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_cyber remove:repeating_armor remove:repeating_gear remove:repeating_cyber", function calculateMods(){
+    TAS.repeatingSimpleSum("armor", "ev", "ev_sum");
+
+    TAS.repeating("gear")
+        .attrs("gear_all_mods")
+        .fields("gear_mods")
+        .reduce(
+            function(memo, row, attrSet, id, rowSet) {
+                let mods = parseMods(row.gear_mods);
+                for(const [mod, value] of Object.entries(mods)){
+                    if(!(memo.hasOwnProperty(mod))){
+                        memo[mod] = 0;
+                    }
+                    memo[mod] += value;
+                }
+                return memo;
+            }, {},
+            function(memo, rowSet, attrSet){
+                console.log(JSON.stringify(memo));
+                attrSet.gear_all_mods = JSON.stringify(memo);
+            })
+        .execute();
+
+    TAS.repeating("cyber")
+        .attrs("cyber_all_mods")
+        .fields("cyber_mods")
+        .reduce(
+            function(memo, row, attrSet, id, rowSet) {
+                let mods = parseMods(row.cyber_mods);
+                for(const [mod, value] of Object.entries(mods)){
+                    if(!(memo.hasOwnProperty(mod))){
+                        memo[mod] = 0;
+                    }
+                    memo[mod] += value;
+                }
+                return memo;
+            }, {},
+            function(memo, rowSet, attrSet){
+                console.log(JSON.stringify(memo));
+                attrSet.cyber_all_mods = JSON.stringify(memo);
+            })
+        .execute();
 });
 
 function repAttrName(section, id, attr) {
@@ -132,6 +131,668 @@ function parseMods(mods){
     return result;
 }
 
+/* ---- BEGIN: TheAaronSheet.js ---- */
+// Github:   https://github.com/shdwjk/TheAaronSheet/blob/master/TheAaronSheet.js
+// By:       The Aaron, Arcane Scriptomancer
+// Contact:  https://app.roll20.net/users/104025/the-aaron
+
+var TAS = TAS || (function(){
+    'use strict';
+
+    var version = '0.2.5',
+        lastUpdate = 1504710542,
+
+        loggingSettings = {
+            debug: {
+                key:     'debug',
+                title:   'DEBUG',
+                color: {
+                    bgLabel: '#7732A2',
+                    label:   '#F2EF40',
+                    bgText:  '#FFFEB7',
+                    text:    '#7732A2'
+                }
+            },
+            error: {
+                key:     'error',
+                title:   'Error',
+                color: {
+                    bgLabel: '#C11713',
+                    label:   'white',
+                    bgText:  '#C11713',
+                    text:    'white'
+                }
+            },
+            warn: {
+                key:     'warn',
+                title:   'Warning',
+                color: {
+                    bgLabel: '#F29140',
+                    label:   'white',
+                    bgText:  '#FFD8B7',
+                    text:    'black'
+                }
+            },
+            info: {
+                key:     'info',
+                title:   'Info',
+                color: {
+                    bgLabel: '#413FA9',
+                    label:   'white',
+                    bgText:  '#B3B2EB',
+                    text:    'black'
+                }
+            },
+            notice: {
+                key:     'notice',
+                title:   'Notice',
+                color: {
+                    bgLabel: '#33C133',
+                    label:   'white',
+                    bgText:  '#ADF1AD',
+                    text:    'black'
+                }
+            },
+            log: {
+                key:     'log',
+                title:   'Log',
+                color: {
+                    bgLabel: '#f2f240',
+                    label:   'black',
+                    bgText:  '#ffff90',
+                    text:    'black'
+                }
+            },
+            callstack: {
+                key:     'TAS',
+                title:   'function',
+                color: {
+                    bgLabel: '#413FA9',
+                    label:   'white',
+                    bgText:  '#B3B2EB',
+                    text:    'black'
+                }
+            },
+            callstack_async: {
+                key:     'TAS',
+                title:   'ASYNC CALL',
+                color: {
+                    bgLabel: '#413FA9',
+                    label:   'white',
+                    bgText:  '#413FA9',
+                    text:    'white'
+                }
+            },
+            TAS: {
+                key:     'TAS',
+                title:   'TAS',
+                color: {
+                    bgLabel: 'grey',
+                    label:   'black;background:linear-gradient(#304352,#d7d2cc,#d7d2cc,#d7d2cc,#304352)',
+                    bgText:  'grey',
+                    text:    'black;background:linear-gradient(#304352,#d7d2cc,#d7d2cc,#d7d2cc,#304352)'
+                }
+            }
+        },
+
+
+        config = {
+            debugMode: false,
+            logging: {
+                log: true,
+                notice: true,
+                info: true,
+                warn: true,
+                error: true,
+                debug: false
+            }
+        },
+
+        callstackRegistry = [],
+        queuedUpdates = {}, //< Used for delaying saves till the last moment.
+
+        complexType = function(o){
+            switch(typeof o){
+                case 'string':
+                    return 'string';
+                case 'boolean':
+                    return 'boolean';
+                case 'number':
+                    return (_.isNaN(o) ? 'NaN' : (o.toString().match(/\./) ? 'decimal' : 'integer'));
+                case 'function':
+                    return 'function: '+(o.name ? o.name+'()' : '(anonymous)');
+                case 'object':
+                    return (_.isArray(o) ? 'array' : (_.isArguments(o) ? 'arguments' : ( _.isNull(o) ? 'null' : 'object')));
+                default:
+                    return typeof o;
+            }
+        },
+
+        dataLogger = function(primaryLogger,secondaryLogger,data){
+            _.each(data,function(m){
+                var type = complexType(m);
+                switch(type){
+                    case 'string':
+                        primaryLogger(m);
+                        break;
+                    case 'undefined':
+                    case 'null':
+                    case 'NaN':
+                        primaryLogger('['+type+']');
+                        break;
+                    case 'number':
+                    case 'not a number':
+                    case 'integer':
+                    case 'decimal':
+                    case 'boolean':
+                        primaryLogger('['+type+']: '+m);
+                        break;
+                    default:
+                        primaryLogger('['+type+']:=========================================');
+                        secondaryLogger(m);
+                        primaryLogger('=========================================================');
+                        break;
+                }
+            });
+        },
+
+
+        colorLog = function(options){
+            var coloredLoggerFunction,
+                key = options.key,
+                label = options.title || 'TAS',
+                lBGColor = (options.color && options.color.bgLabel) || 'blue',
+                lTxtColor = (options.color && options.color.label) || 'white',
+                mBGColor = (options.color && options.color.bgText) || 'blue',
+                mTxtColor = (options.color && options.color.text) || 'white';
+
+            coloredLoggerFunction = function(message){
+                /* eslint-disable no-console */
+                console.log(
+                    '%c '+label+': %c '+message + ' ',
+                    'background-color: '+lBGColor+';color: '+lTxtColor+'; font-weight:bold;',
+                    'background-color: '+mBGColor+';color: '+mTxtColor+';'
+                );
+                /* eslint-enable no-console */
+            };
+            return function(){
+                if('TAS'===key || config.logging[key]){
+                    /* eslint-disable no-console */
+                    dataLogger(coloredLoggerFunction,function(m){console.log(m);},_.toArray(arguments));
+                    /* eslint-enable no-console */
+                }
+            };
+        },
+
+        logDebug  = colorLog(loggingSettings.debug),
+        logError  = colorLog(loggingSettings.error),
+        logWarn   = colorLog(loggingSettings.warn),
+        logInfo   = colorLog(loggingSettings.info),
+        logNotice = colorLog(loggingSettings.notice),
+        logLog    = colorLog(loggingSettings.log),
+        log       = colorLog(loggingSettings.TAS),
+        logCS     = colorLog(loggingSettings.callstack),
+        logCSA    = colorLog(loggingSettings.callstack_async),
+
+        registerCallstack = function(callstack,label){
+            var idx=_.findIndex(callstackRegistry,function(o){
+                return (_.difference(o.stack,callstack).length === _.difference(callstack,o.stack).length) &&
+                    _.difference(o.stack,callstack).length === 0 &&
+                    o.label === label;
+            });
+            if(-1 === idx){
+                idx=callstackRegistry.length;
+                callstackRegistry.push({
+                    stack: callstack,
+                    label: label
+                });
+            }
+            return idx;
+        },
+
+        setConfigOption = function(options){
+            var newconf =_.defaults(options,config);
+            newconf.logging=_.defaults(
+                (options && options.logging)||{},
+                config.logging
+            );
+            config=newconf;
+        },
+
+        isDebugMode = function(){
+            return config.debugMode;
+        },
+
+        debugMode = function(){
+            config.logging.debug=true;
+            config.debugMode = true;
+        },
+
+        getCallstack = function(){
+            var e = new Error('dummy'),
+                stack = _.map(_.rest(e.stack.replace(/^[^(]+?[\n$]/gm, '')
+                    .replace(/^\s+at\s+/gm, '')
+                    .replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
+                    .split('\n')),function(l){
+                    return l.replace(/\s+.*$/,'');
+                });
+            return stack;
+        },
+        logCallstackSub = function(cs){
+            var matches, csa;
+            _.find(cs,function(line){
+                matches = line.match(/TAS_CALLSTACK_(\d+)/);
+                if(matches){
+                    csa=callstackRegistry[matches[1]];
+                    logCSA( '===================='+(csa.label ? '> '+csa.label+' <' : '')+'====================');
+                    logCallstackSub(csa.stack);
+                    return true;
+                }
+                logCS(line);
+                return false;
+            });
+        },
+        logCallstack = function(){
+            var cs;
+            if(config.debugMode){
+                cs = getCallstack();
+                cs.shift();
+                log('==============================> CALLSTACK <==============================');
+                logCallstackSub(cs);
+                log('=========================================================================');
+            }
+        },
+
+
+        wrapCallback = function (label, callback, context){
+            var callstack;
+            if('function' === typeof label){
+                context=callback;
+                callback=label;
+                label=undefined;
+            }
+            if(!config.debugMode){
+                return (function(cb,ctx){
+                    return function(){
+                        cb.apply(ctx||{},arguments);
+                    };
+                }(callback,context));
+            }
+
+            callstack = getCallstack();
+            callstack.shift();
+
+            return (function(cb,ctx,cs,lbl){
+                var ctxref=registerCallstack(cs,lbl);
+
+                /*jshint -W054 */
+                return new Function('cb','ctx','TASlog',
+                    "return function TAS_CALLSTACK_"+ctxref+"(){"+
+                    "var start,end;"+
+                    "TASlog('Entering: '+(cb.name||'(anonymous function)'));"+
+                    "start=_.now();"+
+                    "cb.apply(ctx||{},arguments);"+
+                    "end=_.now();"+
+                    "TASlog('Exiting: '+(cb.name||'(anonymous function)')+' :: '+(end-start)+'ms elapsed');"+
+                    "};")(cb,ctx,log);
+                /*jshint +W054 */
+            }(callback,context,callstack,label));
+        },
+
+
+        prepareUpdate = function( attribute, value ){
+            queuedUpdates[attribute]=value;
+        },
+
+        applyQueuedUpdates = function() {
+            setAttrs(queuedUpdates);
+            queuedUpdates = {};
+        },
+
+        namesFromArgs = function(args,base){
+            return _.chain(args)
+                .reduce(function(memo,attr){
+                    if('string' === typeof attr) {
+                        memo.push(attr);
+                    } else if(_.isArray(args) || _.isArguments(args)){
+                        memo = namesFromArgs(attr,memo);
+                    }
+                    return memo;
+                },(_.isArray(base) && base) || [])
+                .uniq()
+                .value();
+        },
+
+        addId = function(obj,value){
+            Object.defineProperty(obj,'id',{
+                value: value,
+                writable: false,
+                enumerable: false
+            });
+        },
+
+        addProp = function(obj,prop,value,fullname){
+            (function(){
+                var pname=(_.contains(['S','F','I','D'],prop) ? '_'+prop : prop),
+                    full_pname = fullname || prop,
+                    pvalue=value;
+
+                _.each(['S','I','F'],function(p){
+                    if( !_.has(obj,p)){
+                        Object.defineProperty(obj, p, {
+                            value: {},
+                            enumerable: false,
+                            readonly: true
+                        });
+                    }
+                });
+                if( !_.has(obj,'D')){
+                    Object.defineProperty(obj, 'D', {
+                        value: _.reduce(_.range(10),function(m,d){
+                            Object.defineProperty(m, d, {
+                                value: {},
+                                enumerable: true,
+                                readonly: true
+                            });
+                            return m;
+                        },{}),
+                        enumerable: false,
+                        readonly: true
+                    });
+                }
+
+
+                // Raw value
+                Object.defineProperty(obj, pname, {
+                    enumerable: true,
+                    set: function(v){
+                        if(v!==pvalue) {
+                            pvalue=v;
+                            prepareUpdate(full_pname,v);
+                        }
+                    },
+                    get: function(){
+                        return pvalue;
+                    }
+                });
+
+                // string value
+                Object.defineProperty(obj.S, pname, {
+                    enumerable: true,
+                    set: function(v){
+                        var val=v.toString();
+                        if(val !== pvalue) {
+                            pvalue=val;
+                            prepareUpdate(full_pname,val);
+                        }
+                    },
+                    get: function(){
+                        return pvalue.toString();
+                    }
+                });
+
+                // int value
+                Object.defineProperty(obj.I, pname, {
+                    enumerable: true,
+                    set: function(v){
+                        var val=parseInt(v,10) || 0;
+                        if(val !== pvalue){
+                            pvalue=val;
+                            prepareUpdate(full_pname,val);
+                        }
+                    },
+                    get: function(){
+                        return parseInt(pvalue,10) || 0;
+                    }
+                });
+
+                // float value
+                Object.defineProperty(obj.F, pname, {
+                    enumerable: true,
+                    set: function(v){
+                        var val=parseFloat(v) || 0;
+                        if(val !== pvalue) {
+                            pvalue=val;
+                            prepareUpdate(full_pname,val);
+                        }
+                    },
+                    get: function(){
+                        return parseFloat(pvalue) || 0;
+                    }
+                });
+                _.each(_.range(10),function(d){
+                    Object.defineProperty(obj.D[d], pname, {
+                        enumerable: true,
+                        set: function(v){
+                            var val=(parseFloat(v) || 0).toFixed(d);
+                            if(val !== pvalue){
+                                pvalue=val;
+                                prepareUpdate(full_pname,val);
+                            }
+                        },
+                        get: function(){
+                            return (parseFloat(pvalue) || 0).toFixed(d);
+                        }
+                    });
+                });
+
+            }());
+        },
+
+        repeating = function( section ) {
+            return (function(s){
+                var sectionName = s,
+                    attrNames = [],
+                    fieldNames = [],
+                    operations = [],
+                    after = [],
+
+                    repAttrs = function TAS_Repeating_Attrs(){
+                        attrNames = namesFromArgs(arguments,attrNames);
+                        return this;
+                    },
+                    repFields = function TAS_Repeating_Fields(){
+                        fieldNames = namesFromArgs(arguments,fieldNames);
+                        return this;
+                    },
+                    repReduce = function TAS_Repeating_Reduce(func, initial, final, context) {
+                        operations.push({
+                            type: 'reduce',
+                            func: (func && _.isFunction(func) && func) || _.noop,
+                            memo: (_.isUndefined(initial) && 0) || initial,
+                            final: (final && _.isFunction(final) && final) || _.noop,
+                            context: context || {}
+                        });
+                        return this;
+                    },
+                    repMap = function TAS_Repeating_Map(func, final, context) {
+                        operations.push({
+                            type: 'map',
+                            func: (func && _.isFunction(func) && func) || _.noop,
+                            final: (final && _.isFunction(final) && final) || _.noop,
+                            context: context || {}
+                        });
+                        return this;
+                    },
+                    repEach = function TAS_Repeating_Each(func, final, context) {
+                        operations.push({
+                            type: 'each',
+                            func: (func && _.isFunction(func) && func) || _.noop,
+                            final: (final && _.isFunction(final) && final) || _.noop,
+                            context: context || {}
+                        });
+                        return this;
+                    },
+                    repTap = function TAS_Repeating_Tap(final, context) {
+                        operations.push({
+                            type: 'tap',
+                            final: (final && _.isFunction(final) && final) || _.noop,
+                            context: context || {}
+                        });
+                        return this;
+                    },
+                    repAfter = function TAS_Repeating_After(callback,context) {
+                        after.push({
+                            callback: (callback && _.isFunction(callback) && callback) || _.noop,
+                            context: context || {}
+                        });
+                        return this;
+                    },
+                    repExecute = function TAS_Repeating_Execute(callback,context){
+                        var rowSet = {},
+                            attrSet = {},
+                            fieldIds = [],
+                            fullFieldNames = [];
+
+                        repAfter(callback,context);
+
+                        // call each operation per row.
+                        // call each operation's final
+                        getSectionIDs("repeating_"+sectionName,function(ids){
+                            fieldIds = ids;
+                            fullFieldNames = _.reduce(fieldIds,function(memo,id){
+                                return memo.concat(_.map(fieldNames,function(name){
+                                    return 'repeating_'+sectionName+'_'+id+'_'+name;
+                                }));
+                            },[]);
+                            getAttrs( _.uniq(attrNames.concat(fullFieldNames)), function(values){
+                                _.each(attrNames,function(aname){
+                                    if(values.hasOwnProperty(aname)){
+                                        addProp(attrSet,aname,values[aname]);
+                                    }
+                                });
+
+                                rowSet = _.reduce(fieldIds,function(memo,id){
+                                    var r={};
+                                    addId(r,id);
+                                    _.each(fieldNames,function(name){
+                                        var fn = 'repeating_'+sectionName+'_'+id+'_'+name;
+                                        addProp(r,name,values[fn],fn);
+                                    });
+
+                                    memo[id]=r;
+
+                                    return memo;
+                                },{});
+
+                                _.each(operations,function(op){
+                                    var res;
+                                    switch(op.type){
+                                        case 'tap':
+                                            _.bind(op.final,op.context,rowSet,attrSet)();
+                                            break;
+
+                                        case 'each':
+                                            _.each(rowSet,function(r){
+                                                _.bind(op.func,op.context,r,attrSet,r.id,rowSet)();
+                                            });
+                                            _.bind(op.final,op.context,rowSet,attrSet)();
+                                            break;
+
+                                        case 'map':
+                                            res = _.map(rowSet,function(r){
+                                                return _.bind(op.func,op.context,r,attrSet,r.id,rowSet)();
+                                            });
+                                            _.bind(op.final,op.context,res,rowSet,attrSet)();
+                                            break;
+
+                                        case 'reduce':
+                                            res = op.memo;
+                                            _.each(rowSet,function(r){
+                                                res = _.bind(op.func,op.context,res,r,attrSet,r.id,rowSet)();
+                                            });
+                                            _.bind(op.final,op.context,res,rowSet,attrSet)();
+                                            break;
+                                    }
+                                });
+
+                                // finalize attrs
+                                applyQueuedUpdates();
+                                _.each(after,function(op){
+                                    _.bind(op.callback,op.context)();
+                                });
+                            });
+                        });
+                    };
+
+                return {
+                    attrs: repAttrs,
+                    attr: repAttrs,
+
+                    column: repFields,
+                    columns: repFields,
+                    field: repFields,
+                    fields: repFields,
+
+                    reduce: repReduce,
+                    inject: repReduce,
+                    foldl: repReduce,
+
+                    map: repMap,
+                    collect: repMap,
+
+                    each: repEach,
+                    forEach: repEach,
+
+                    tap: repTap,
+                    'do': repTap,
+
+                    after: repAfter,
+                    last: repAfter,
+                    done: repAfter,
+
+                    execute: repExecute,
+                    go: repExecute,
+                    run: repExecute
+                };
+            }(section));
+        },
+
+
+        repeatingSimpleSum = function(section, field, destination){
+            repeating(section)
+                .attr(destination)
+                .field(field)
+                .reduce(function(m,r){
+                    return m + (r.F[field]);
+                },0,function(t,r,a){
+                    a.S[destination]=t;
+                })
+                .execute();
+        };
+
+    /* eslint-disable no-console */
+    console.log('%c•.¸¸.•*´¨`*•.¸¸.•*´¨`*•.¸  The Aaron Sheet  v'+version+'  ¸.•*´¨`*•.¸¸.•*´¨`*•.¸¸.•','background: linear-gradient(to right,green,white,white,green); color:black;text-shadow: 0 0 8px white;');
+    console.log('%c•.¸¸.•*´¨`*•.¸¸.•*´¨`*•.¸  Last update: '+(new Date(lastUpdate*1000))+'  ¸.•*´¨`*•.¸¸.•*´¨`*•.¸¸.•','background: linear-gradient(to right,green,white,white,green); color:black;text-shadow: 0 0 8px white;');
+    /* eslint-enable no-console */
+
+
+    return {
+        /* Repeating Sections */
+        repeatingSimpleSum: repeatingSimpleSum,
+        repeating: repeating,
+
+        /* Configuration */
+        config: setConfigOption,
+
+        /* Debugging */
+        callback: wrapCallback,
+        callstack: logCallstack,
+        debugMode: debugMode,
+        isDebugMode: isDebugMode,
+        _fn: wrapCallback,
+
+        /* Logging */
+        debug: logDebug,
+        error: logError,
+        warn: logWarn,
+        info: logInfo,
+        notice: logNotice,
+        log: logLog
+    };
+}());
+
+/* ---- END: TheAaronSheet.js ---- */
 </script>
     <div class="header-section">
         <div class="logo section">
@@ -198,7 +859,7 @@ function parseMods(mods){
                 </div>
                 <div class="save">
                     <div class="save-table">
-                        <div>SAVE</div>
+                        <div><button type="roll" value="/roll 1d10<@{save}" class="roll-btn">SAVE</button></div>
                         <div><input name="attr_save" type="number" readonly/></div>
                     </div>
                     <div class="btm-table">
@@ -321,6 +982,7 @@ function parseMods(mods){
 
             <div class="armor section">
                 <span>Armor</span>
+                <input hidden name="attr_ev_sum"/>
                 <div class="armor-row">
                     <fieldset class="repeating_armor">
                         <input class="options-flag" type="checkbox" name="attr_options-flag">
@@ -373,64 +1035,64 @@ function parseMods(mods){
                     </div>
                     <div class="skill-row" style="font-weight: bolder;">ABILITIES</div>
                     <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Authority}" class="skill-btn">Authority
+                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Authority}" class="roll-btn">Authority
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Authority"/></div>
                     <div><input type="number" class="skill-ip" name="attr_authority_ip"></div>
                     <input type="hidden" name="attr_authority_uses">                    </div>
-                <div class="skill-row">                        <div><button type="roll" value="/roll 1d10 + @{Cool} + @{cLeadership}" class="skill-btn">C. Leadership</button></div><div><input type="number" class="skill-input" name="attr_cLeadership"/></div>                       <div><input type="number" class="skill-ip" name="attr_cLeadership_ip"></div>
+                <div class="skill-row">                        <div><button type="roll" value="/roll 1d10 + @{Cool} + @{cLeadership}" class="roll-btn">C. Leadership</button></div><div><input type="number" class="skill-input" name="attr_cLeadership"/></div>                       <div><input type="number" class="skill-ip" name="attr_cLeadership_ip"></div>
                     <input type="hidden" name="attr_cLeadership_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Reflex} + @{Combat-sense}" class="skill-btn">Combat Sense
+                    <button type="roll" value="/roll 1d10 + @{Reflex} + @{Combat-sense}" class="roll-btn">Combat Sense
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_combat-sense"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Combat-sense_ip"></div>
                     <input type="hidden" name="attr_Combat-sense_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Credibility}" class="skill-btn">Credibility
+                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Credibility}" class="roll-btn">Credibility
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Credibility"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Leadership_ip"></div>
                     <input type="hidden" name="attr_Credibility_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Family}" class="skill-btn">Family
+                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Family}" class="roll-btn">Family
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Family"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Family_ip"></div>
                     <input type="hidden" name="attr_Family_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Interface}" class="skill-btn">Interface
+                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Interface}" class="roll-btn">Interface
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Interface"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Interface_ip"></div>
                     <input type="hidden" name="attr_Interface_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll @{rig}d6" class="skill-btn">Jury Rig</button>
+                    <button type="roll" value="/roll @{rig}d6" class="roll-btn">Jury Rig</button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_rig"/></div>
                     <div><input type="number" class="skill-ip" name="attr_rig_ip"></div>
                     <input type="hidden" name="attr_rig_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{medtech}" class="skill-btn">Medical Tech
+                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{medtech}" class="roll-btn">Medical Tech
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_medtech"/></div>
                     <div><input type="number" class="skill-ip" name="attr_medtech_ip"></div>
                     <input type="hidden" name="attr_medtech_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Resources}" class="skill-btn">Resources
+                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Resources}" class="roll-btn">Resources
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Resources"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Resources_ip"></div>
                     <input type="hidden" name="attr_Resources_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Streetdeal}" class="skill-btn">Streetdeal
+                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Streetdeal}" class="roll-btn">Streetdeal
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Streetdeal"/></div>
@@ -438,14 +1100,14 @@ function parseMods(mods){
                     <input type="hidden" name="attr_Streetdeal_uses">                    </div>
                 <div class="skill-row" style="font-weight: bold;">ATTR</div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{attractiveness} + @{grooming}" class="skill-btn">Grooming
+                    <button type="roll" value="/roll 1d10 + @{attractiveness} + @{grooming}" class="roll-btn">Grooming
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_grooming"/></div>
                     <div><input type="number" class="skill-ip" name="attr_grooming_ip"></div>
                     <input type="hidden" name="attr_grooming_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{attractiveness} + @{style}" class="skill-btn">Wardrobe & Style
+                    <button type="roll" value="/roll 1d10 + @{attractiveness} + @{style}" class="roll-btn">Wardrobe & Style
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_style"/></div>
@@ -453,14 +1115,14 @@ function parseMods(mods){
                     <input type="hidden" name="attr_style_uses">                    </div>
                 <div class="skill-row" style="font-weight: bold;">BODY</div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{body} + @{Endurance}" class="skill-btn">Endurance
+                    <button type="roll" value="/roll 1d10 + @{body} + @{Endurance}" class="roll-btn">Endurance
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Endurance"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Endurance_ip"></div>
                     <input type="hidden" name="attr_Endurance_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{body} + @{strfeat}" class="skill-btn">Strength
+                    <button type="roll" value="/roll 1d10 + @{body} + @{strfeat}" class="roll-btn">Strength
                         Feat
                     </button>
                 </div>
@@ -468,7 +1130,7 @@ function parseMods(mods){
                     <div><input type="number" class="skill-ip" name="attr_strfeat_ip"></div>
                     <input type="hidden" name="attr_strfeat_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{body} + @{Swimming}" class="skill-btn">Swimming
+                    <button type="roll" value="/roll 1d10 + @{body} + @{Swimming}" class="roll-btn">Swimming
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Swimming"/></div>
@@ -476,35 +1138,35 @@ function parseMods(mods){
                     <input type="hidden" name="attr_Swimming_uses">                    </div>
                 <div class="skill-row" style="font-weight: bold;">COOL/WILL</div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Interrogation}" class="skill-btn">Interrogation
+                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Interrogation}" class="roll-btn">Interrogation
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Interrogation"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Interrogation_ip"></div>
                     <input type="hidden" name="attr_Interrogation_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Intimidate}" class="skill-btn">Intimidate
+                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Intimidate}" class="roll-btn">Intimidate
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Intimidate"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Intimidate_ip"></div>
                     <input type="hidden" name="attr_Intimidate_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Oratory}" class="skill-btn">Oratory
+                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Oratory}" class="roll-btn">Oratory
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Oratory"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Oratory_ip"></div>
                     <input type="hidden" name="attr_Oratory_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Resist}" class="skill-btn">Resist T/D
+                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Resist}" class="roll-btn">Resist T/D
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Resist"/></div>
                     <div><input type="number" class="skill-ip" name="attr_Resist_ip"></div>
                     <input type="hidden" name="attr_Resist_uses">                    </div>
                 <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Streetwise}" class="skill-btn">Streetwise
+                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Streetwise}" class="roll-btn">Streetwise
                     </button>
                 </div>
                     <div><input type="number" class="skill-input" name="attr_Streetwise"/></div>
@@ -520,147 +1182,147 @@ function parseMods(mods){
                     <div class="skill-row" style="font-weight: bold;">INT</div>
                     <div class="skill-row">                        <div>
                         <button type="roll" value="/roll 1d10 + @{Intelligence} + @{anthropology}"
-                                class="skill-btn">Anthropology
+                                class="roll-btn">Anthropology
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_anthropology"/></div>
                         <div><input type="number" class="skill-ip" name="attr_anthropology_ip"></div>
                         <input type="hidden" name="attr_anthropology_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Awareness}" class="skill-btn">Awareness/Notice
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Awareness}" class="roll-btn">Awareness/Notice
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Awareness"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Awareness_ip"></div>
                         <input type="hidden" name="attr_Awareness_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Biology}" class="skill-btn">Biology
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Biology}" class="roll-btn">Biology
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Biology"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Biology_ip"></div>
                         <input type="hidden" name="attr_Biology_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Botany}" class="skill-btn">Botany
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Botany}" class="roll-btn">Botany
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Botany"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Botany_ip"></div>
                         <input type="hidden" name="attr_Botany_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Chemistry}" class="skill-btn">Chemistry
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Chemistry}" class="roll-btn">Chemistry
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Chemistry"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Chemistry_ip"></div>
                         <input type="hidden" name="attr_Chemistry_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Composition}" class="skill-btn">Composition
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Composition}" class="roll-btn">Composition
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Composition"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Composition_ip"></div>
                         <input type="hidden" name="attr_Composition_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Diagnose}" class="skill-btn">Diagnose Illness
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Diagnose}" class="roll-btn">Diagnose Illness
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Diagnose"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Diagnose_ip"></div>
                         <input type="hidden" name="attr_Diagnose_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Education}" class="skill-btn">Education&Knowledge
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Education}" class="roll-btn">Education&Knowledge
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Education"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Education_ip"></div>
                         <input type="hidden" name="attr_Education_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Expert}" class="skill-btn">Expert
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Expert}" class="roll-btn">Expert
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Expert"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Expert_ip"></div>
                         <input type="hidden" name="attr_Expert_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Gamble}" class="skill-btn">Gamble
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Gamble}" class="roll-btn">Gamble
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Gamble"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Gamble_ip"></div>
                         <input type="hidden" name="attr_Gamble_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Accounting}" class="skill-btn">Accounting
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Accounting}" class="roll-btn">Accounting
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Accounting"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Accounting_ip"></div>
                         <input type="hidden" name="attr_Accounting_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Geology}" class="skill-btn">Geology
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Geology}" class="roll-btn">Geology
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Geology"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Geology_ip"></div>
                         <input type="hidden" name="attr_Geology_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Hide}" class="skill-btn">Hide/Evade
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Hide}" class="roll-btn">Hide/Evade
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Hide"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Hide_ip"></div>
                         <input type="hidden" name="attr_Hide_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{History}" class="skill-btn">History
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{History}" class="roll-btn">History
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_History"/></div>
                         <div><input type="number" class="skill-ip" name="attr_History_ip"></div>
                         <input type="hidden" name="attr_History_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Language}" class="skill-btn">Language
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Language}" class="roll-btn">Language
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Language"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Language_ip"></div>
                         <input type="hidden" name="attr_Language_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Library}" class="skill-btn">Library Search
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Library}" class="roll-btn">Library Search
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Library"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Library_ip"></div>
                         <input type="hidden" name="attr_Library_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Mathematics}" class="skill-btn">Mathematics
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Mathematics}" class="roll-btn">Mathematics
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Mathematics"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Mathematics_ip"></div>
                         <input type="hidden" name="attr_Mathematics_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Physics}" class="skill-btn">Physics
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Physics}" class="roll-btn">Physics
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Physics"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Physics_ip"></div>
                         <input type="hidden" name="attr_Physics_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Programming}" class="skill-btn">Programming
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Programming}" class="roll-btn">Programming
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Programming"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Programming_ip"></div>
                         <input type="hidden" name="attr_Programming_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Shadow}" class="skill-btn">Shadow/Track
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Shadow}" class="roll-btn">Shadow/Track
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Shadow"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Shadow_ip"></div>
                         <input type="hidden" name="attr_Shadow_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Stock}" class="skill-btn">Stock
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Stock}" class="roll-btn">Stock
                             Market
                         </button>
                     </div>
@@ -668,28 +1330,28 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Stock_ip"></div>
                         <input type="hidden" name="attr_Stock_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{System}" class="skill-btn">System Know
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{System}" class="roll-btn">System Know
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_System"/></div>
                         <div><input type="number" class="skill-ip" name="attr_System_ip"></div>
                         <input type="hidden" name="attr_System_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Teaching}" class="skill-btn">Teaching
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Teaching}" class="roll-btn">Teaching
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Teaching"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Teaching_ip"></div>
                         <input type="hidden" name="attr_Teaching_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Wilderness}" class="skill-btn">Wilderness Surv
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Wilderness}" class="roll-btn">Wilderness Surv
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Wilderness"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Wilderness_ip"></div>
                         <input type="hidden" name="attr_Wilderness_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Zoology}" class="skill-btn">Zoology
+                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Zoology}" class="roll-btn">Zoology
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Zoology"/></div>
@@ -704,35 +1366,35 @@ function parseMods(mods){
                     </div>
                     <div class="skill-row" style="font-weight: bold;">REF</div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Archery}" class="skill-btn">Archery
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Archery}" class="roll-btn">Archery
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Archery"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Archery_ip"></div>
                         <input type="hidden" name="attr_Archery_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Athletics}" class="skill-btn">Athletics
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Athletics}" class="roll-btn">Athletics
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Athletics"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Athletics_ip"></div>
                         <input type="hidden" name="attr_Athletics_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Brawling}" class="skill-btn">Brawling
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Brawling}" class="roll-btn">Brawling
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Brawling"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Brawling_ip"></div>
                         <input type="hidden" name="attr_Brawling_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Dance}" class="skill-btn">Dance
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Dance}" class="roll-btn">Dance
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Dance"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Dance_ip"></div>
                         <input type="hidden" name="attr_Dance_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Dodge}" class="skill-btn">Dodge &
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Dodge}" class="roll-btn">Dodge &
                             Escape
                         </button>
                     </div>
@@ -740,28 +1402,28 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Dodge_ip"></div>
                         <input type="hidden" name="attr_Dodge_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Driving}" class="skill-btn">Driving
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Driving}" class="roll-btn">Driving
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Driving"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Driving_ip"></div>
                         <input type="hidden" name="attr_Driving_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Fencing}" class="skill-btn">Fencing
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Fencing}" class="roll-btn">Fencing
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Fencing"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Fencing_ip"></div>
                         <input type="hidden" name="attr_Fencing_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Handgun}" class="skill-btn">Handgun
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Handgun}" class="roll-btn">Handgun
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Handgun"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Handgun_ip"></div>
                         <input type="hidden" name="attr_Handgun_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Heavy}" class="skill-btn">Heavy
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Heavy}" class="roll-btn">Heavy
                             Weapons
                         </button>
                     </div>
@@ -769,7 +1431,7 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Heavy_ip"></div>
                         <input type="hidden" name="attr_Heavy_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Martial}" class="skill-btn">Martial
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Martial}" class="roll-btn">Martial
                             Art 1
                         </button>
                     </div>
@@ -777,21 +1439,21 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Martial_ip"></div>
                         <input type="hidden" name="attr_Martial_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Melee}" class="skill-btn">Melee
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Melee}" class="roll-btn">Melee
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Melee"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Melee_ip"></div>
                         <input type="hidden" name="attr_Melee_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Motorcycle}" class="skill-btn">Motorcycle
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Motorcycle}" class="roll-btn">Motorcycle
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Motorcycle"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Motorcycle_ip"></div>
                         <input type="hidden" name="attr_Motorcycle_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Gyro}" class="skill-btn">Pilot
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Gyro}" class="roll-btn">Pilot
                             (Gyro)
                         </button>
                     </div>
@@ -799,7 +1461,7 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Gyro_ip"></div>
                         <input type="hidden" name="attr_Gyro_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{FixedWing}" class="skill-btn">Pilot
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{FixedWing}" class="roll-btn">Pilot
                             (Fixed Wing)
                         </button>
                     </div>
@@ -807,7 +1469,7 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_FixedWing_ip"></div>
                         <input type="hidden" name="attr_FixedWing_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Dirigible}" class="skill-btn">Pilot
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Dirigible}" class="roll-btn">Pilot
                             (Dirigible)
                         </button>
                     </div>
@@ -815,7 +1477,7 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Dirigible_ip"></div>
                         <input type="hidden" name="attr_Dirigible_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Thrust}" class="skill-btn">Pilot
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Thrust}" class="roll-btn">Pilot
                             (Vect.Thrust)
                         </button>
                     </div>
@@ -823,28 +1485,28 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Thrust_ip"></div>
                         <input type="hidden" name="attr_Thrust_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Rifle}" class="skill-btn">Rifle
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Rifle}" class="roll-btn">Rifle
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Rifle"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Rifle_ip"></div>
                         <input type="hidden" name="attr_Rifle_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Stealth}" class="skill-btn">Stealth
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Stealth}" class="roll-btn">Stealth
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Stealth"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Stealth_ip"></div>
                         <input type="hidden" name="attr_Stealth_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Submachinegun}" class="skill-btn">Submachinegun
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Submachinegun}" class="roll-btn">Submachinegun
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Submachinegun"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Submachinegun_ip"></div>
                         <input type="hidden" name="attr_Submachinegun_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Machinery}" class="skill-btn">
+                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Machinery}" class="roll-btn">
                             Hvy.Machinery
                         </button>
                     </div>
@@ -853,7 +1515,7 @@ function parseMods(mods){
                         <input type="hidden" name="attr_Machinery_uses">                    </div>
                     <div class="skill-row" style="font-weight: bold;">EMPATHY</div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Perception}" class="skill-btn">Human
+                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Perception}" class="roll-btn">Human
                             Perception
                         </button>
                     </div>
@@ -861,42 +1523,42 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Perception_ip"></div>
                         <input type="hidden" name="attr_Perception_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Interview}" class="skill-btn">Interview
+                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Interview}" class="roll-btn">Interview
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Interview"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Interview_ip"></div>
                         <input type="hidden" name="attr_Interview_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Leadership}" class="skill-btn">Leadership
+                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Leadership}" class="roll-btn">Leadership
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Leadership"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Leadership_ip"></div>
                         <input type="hidden" name="attr_Leadership_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Seduction}" class="skill-btn">Seduction
+                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Seduction}" class="roll-btn">Seduction
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Seduction"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Seduction_ip"></div>
                         <input type="hidden" name="attr_Seduction_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Social}" class="skill-btn">Social
+                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Social}" class="roll-btn">Social
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Social"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Social_ip"></div>
                         <input type="hidden" name="attr_Social_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Persuasion}" class="skill-btn">Persuasion & Fast Talk
+                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Persuasion}" class="roll-btn">Persuasion & Fast Talk
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Persuasion"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Persuasion_ip"></div>
                         <input type="hidden" name="attr_Persuasion_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Perform}" class="skill-btn">Perform
+                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Perform}" class="roll-btn">Perform
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Perform"/></div>
@@ -911,27 +1573,27 @@ function parseMods(mods){
                     </div>
                     <div class="skill-row" style="font-weight: bold;">TECH</div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Aero}" class="skill-btn">Aero Tech
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Aero}" class="roll-btn">Aero Tech
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Aero"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Aero_ip"></div>
                         <input type="hidden" name="attr_Aero_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{AV}" class="skill-btn">AV Tech</button>
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{AV}" class="roll-btn">AV Tech</button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_AV"/></div>
                         <div><input type="number" class="skill-ip" name="attr_AV_ip"></div>
                         <input type="hidden" name="attr_AV_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Basic}" class="skill-btn">Basic Tech
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Basic}" class="roll-btn">Basic Tech
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Basic"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Basic_ip"></div>
                         <input type="hidden" name="attr_Basic_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Cryotank}" class="skill-btn">Cryotank
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Cryotank}" class="roll-btn">Cryotank
                             Op
                         </button>
                     </div>
@@ -939,7 +1601,7 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Cryotank_ip"></div>
                         <input type="hidden" name="attr_Cryotank_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Cyberdeck}" class="skill-btn">Cyberdeck
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Cyberdeck}" class="roll-btn">Cyberdeck
                             Design
                         </button>
                     </div>
@@ -947,35 +1609,35 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Cyberdeck_ip"></div>
                         <input type="hidden" name="attr_Cyberdeck_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Cyber}" class="skill-btn">Cyber Tech
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Cyber}" class="roll-btn">Cyber Tech
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Cyber"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Cyber_ip"></div>
                         <input type="hidden" name="attr_Cyber_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Demolitions}" class="skill-btn">Demolitions
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Demolitions}" class="roll-btn">Demolitions
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Demolitions"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Demolitions_ip"></div>
                         <input type="hidden" name="attr_Demolitions_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Disguise}" class="skill-btn">Disguise
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Disguise}" class="roll-btn">Disguise
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Disguise"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Disguise_ip"></div>
                         <input type="hidden" name="attr_Disguise_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Electronics}" class="skill-btn">Electronics
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Electronics}" class="roll-btn">Electronics
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Electronics"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Electronics_ip"></div>
                         <input type="hidden" name="attr_Electronics_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Security}" class="skill-btn">Elect.
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Security}" class="roll-btn">Elect.
                             Security
                         </button>
                     </div>
@@ -983,28 +1645,28 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Security_ip"></div>
                         <input type="hidden" name="attr_Security_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{FirstAid}" class="skill-btn">First Aid
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{FirstAid}" class="roll-btn">First Aid
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_FirstAid"/></div>
                         <div><input type="number" class="skill-ip" name="attr_FirstAid_ip"></div>
                         <input type="hidden" name="attr_FirstAid_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Forgery}" class="skill-btn">Forgery
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Forgery}" class="roll-btn">Forgery
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Forgery"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Forgery_ip"></div>
                         <input type="hidden" name="attr_Leadership_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Gyro}" class="skill-btn">Gyro Tech
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Gyro}" class="roll-btn">Gyro Tech
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Gyro"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Gyro_ip"></div>
                         <input type="hidden" name="attr_Gyro_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Paint}" class="skill-btn">Paint or
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Paint}" class="roll-btn">Paint or
                             Draw
                         </button>
                     </div>
@@ -1012,28 +1674,28 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Paint_ip"></div>
                         <input type="hidden" name="attr_Paint_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Photo}" class="skill-btn">Photo & Film
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Photo}" class="roll-btn">Photo & Film
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Photo"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Photo_ip"></div>
                         <input type="hidden" name="attr_Photo_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Pharmacuticals}" class="skill-btn">Pharmacuticals
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Pharmacuticals}" class="roll-btn">Pharmacuticals
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Pharmacuticals"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Pharmacuticals_ip"></div>
                         <input type="hidden" name="attr_Pharmacuticals_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{PickLock}" class="skill-btn">Pick Lock
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{PickLock}" class="roll-btn">Pick Lock
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_PickLock"/></div>
                         <div><input type="number" class="skill-ip" name="attr_PickLock_ip"></div>
                         <input type="hidden" name="attr_PickLock_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{PickPocket}" class="skill-btn">Pick
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{PickPocket}" class="roll-btn">Pick
                             Pocket
                         </button>
                     </div>
@@ -1041,7 +1703,7 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_PickPocket_ip"></div>
                         <input type="hidden" name="attr_PickPocket_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Instrument}" class="skill-btn">Play
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Instrument}" class="roll-btn">Play
                             Instrument
                         </button>
                     </div>
@@ -1049,14 +1711,14 @@ function parseMods(mods){
                         <div><input type="number" class="skill-ip" name="attr_Instrument_ip"></div>
                         <input type="hidden" name="attr_Instrument_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Weaponsmith}" class="skill-btn">Weaponsmith
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Weaponsmith}" class="roll-btn">Weaponsmith
                         </button>
                     </div>
                         <div><input type="number" class="skill-input" name="attr_Weaponsmith"/></div>
                         <div><input type="number" class="skill-ip" name="attr_Weaponsmith_ip"></div>
                         <input type="hidden" name="attr_Weaponsmith_uses">                    </div>
                     <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Weapons}" class="skill-btn">Weapons
+                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Weapons}" class="roll-btn">Weapons
                             Tech
                         </button>
                     </div>
@@ -1069,6 +1731,7 @@ function parseMods(mods){
         <div class="tab-content gear-tab">
             <div class="gear section">
                 <span>Gear</span>
+                <input hidden name="attr_gear_all_mods"/>
                 <div class="gear-row">
                     <fieldset class="repeating_gear">
                         <input class="options-flag" type="checkbox" name="attr_options-flag">
@@ -1086,6 +1749,7 @@ function parseMods(mods){
 
             <div class="cyber section">
                 <span>Cybernetics</span>
+                <input hidden name="attr_cyber_all_mods"/>
                 <div>
                     <fieldset class="repeating_cyber">
                         <input class="options-flag" type="checkbox" name="attr_options-flag">
