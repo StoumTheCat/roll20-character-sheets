@@ -1,24 +1,18 @@
 <div class="main">
     <script type="text/worker">
-on("change:movement change:body", function() {
-    getAttrs(["movement", "body"], function(values) {
+on("change:move change:body", function() {
+    getAttrs(["move", "body"], function(values) {
         console.log(values);
-        let mv = values.movement*3;
-        let btmVar;
-        switch (values.body) {
-            case "0": case "1": case "2": btmVar = 0; break;
-            case "3": case "4": btmVar = 1; break;
-            case "5": case "6": case "7": btmVar = 2; break;
-            case "8": case "9": btmVar = 3; break;
-            case "10": btmVar = 4; break;
-        }
+        let mv = values.move*2;
+
         setAttrs({
             run_max: mv,
             run: mv,
-            leap: mv/4,
+            leap: mv/3,
             save: values.body,
-            btm: btmVar,
-            lift: values.body*40
+            lift: values.body*40,
+            hp_max: values.body*5,
+            hp: values.body*5
         })
     });
 });
@@ -58,16 +52,57 @@ on("clicked:recalc-sp", function(eventInfo){
     });
 });
 
-on("change:ev_sum change:gear_all_mods change:cyber_all_mods", function () {
-    getAttrs(["ev_sum", "gear_all_mods", "cyber_all_mods", "reflex"], function(values){
+on("sheet:opened change:ev_sum change:gear_all_mods change:cyber_all_mods change:ref", function () {
+    getAttrs(["ev_sum", "gear_all_mods", "cyber_all_mods", "ref"], function(values){
         let ev_sum = values.ev_sum*-1;
         let gear_mods = JSON.parse(values.gear_all_mods);
         let cyber_mods = JSON.parse(values.cyber_all_mods);
 
         setAttrs({
-            reflex_modified: values.reflex*1 + ev_sum + gear_mods.ref + cyber_mods.ref
+            ref_modified: utz(values.ref)*1 + utz(ev_sum) + utz(gear_mods.ref) + utz(cyber_mods.ref)
         })
     })
+});
+
+on("sheet:opened change:repeating_weapons", function() {
+    TAS.repeating("weapons")
+        .fields("weapon_type", "show_burst_auto")
+        .each(function(row,attrSet,id,rowSet){
+            switch (row.weapon_type) {
+                case "P":
+                case "SHT":
+                case "SNGL": row.show_burst_auto = 0; break;
+                case "SMG":
+                case "RIF":
+                case "AUTO": row.show_burst_auto = 1; break;
+            }
+        }).execute();
+});
+
+on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_cyber change:repeating_weapons", function propagateIds(){
+    TAS.repeating("armor")
+        .fields("armor_id")
+        .each(function(row,attrSet,id,rowSet){
+            row.armor_id = id;
+        }).execute();
+
+    TAS.repeating("gear")
+        .fields("gear_id")
+        .each(function(row,attrSet,id,rowSet){
+            row.gear_id = id;
+        }).execute();
+
+    TAS.repeating("cyber")
+        .fields("cyber_id")
+        .each(function(row,attrSet,id,rowSet){
+            row.cyber_id = id;
+        }).execute();
+
+    TAS.repeating("weapons")
+        .fields("weapon_id")
+        .each(function(row,attrSet,id,rowSet){
+            row.weapon_id = id;
+        }).execute();
 });
 
 on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_cyber remove:repeating_armor remove:repeating_gear remove:repeating_cyber", function calculateMods(){
@@ -78,6 +113,9 @@ on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_c
         .fields("gear_mods")
         .reduce(
             function(memo, row, attrSet, id, rowSet) {
+                if (!row.gear_mods) {
+                    return memo;
+                }
                 let mods = parseMods(row.gear_mods);
                 for(const [mod, value] of Object.entries(mods)){
                     if(!(memo.hasOwnProperty(mod))){
@@ -98,6 +136,9 @@ on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_c
         .fields("cyber_mods")
         .reduce(
             function(memo, row, attrSet, id, rowSet) {
+                if (!row.cyber_mods) {
+                    return memo;
+                }
                 let mods = parseMods(row.cyber_mods);
                 for(const [mod, value] of Object.entries(mods)){
                     if(!(memo.hasOwnProperty(mod))){
@@ -113,6 +154,15 @@ on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_c
             })
         .execute();
 });
+
+//undefined to zero
+function utz(value) {
+    if(value === undefined || isNaN(value)) {
+        return 0;
+    } else {
+        return value;
+    }
+}
 
 function repAttrName(section, id, attr) {
     return "repeating_"+section+"_"+id+"_"+attr;
@@ -796,8 +846,7 @@ var TAS = TAS || (function(){
 </script>
     <div class="header-section">
         <div class="logo section">
-            <h1>Cyberpunk 2020</h1>
-            <h2>by Stoum</h2>
+            <h1>Cyberpunk RED</h1>
         </div>
 
         <div class="info section">
@@ -823,160 +872,74 @@ var TAS = TAS || (function(){
             <div class="stats-section section">
                 <div class="stats">
                     <span>INT</span>
-                    <div><input name="attr_intelligence" type="number"/></div>
+                    <div><input name="attr_int" type="number"/></div>
                     <span>REF</span>
                     <div>
-                        <input name="attr_reflex_mod" hidden/>
-                        <input name="attr_reflex_modified" type="number" class="merge-input-right"/>
-                        <input name="attr_reflex" type="number" class="merge-input-left"/>
+                        <input name="attr_ref_mod" hidden/>
+                        <input name="attr_ref_modified" type="number" class="merge-input-right"/>
+                        <input name="attr_ref" type="number" class="merge-input-left"/>
                     </div>
+                    <span>DEX</span>
+                    <div><input name="attr_dex" type="number"/></div>
                     <span>TECH</span>
                     <div><input name="attr_tech" type="number"/></div>
+                    <span>HP</span>
+                    <div><input name="attr_hp" type="number" class="merge-input-right"/><input name="attr_hp_max"
+                                                                                               type="number"
+                                                                                               class="merge-input-left"
+                                                                                               readonly/></div>
                     <span>COOL</span>
                     <div><input name="attr_cool" type="number"/></div>
-                    <span>ATTR</span>
-                    <div><input name="attr_attractiveness" type="number"/></div>
+                    <span>WILL</span>
+                    <div><input name="attr_will" type="number"/></div>
                     <span>LUCK</span>
                     <div><input name="attr_luck" type="number" class="merge-input-right"/><input name="attr_luck_max"
                                                                                                  type="number"
                                                                                                  class="merge-input-left"/>
                     </div>
-                    <span>MA</span>
-                    <div><input name="attr_movement" type="number"/></div>
+                    <span>MOVE</span>
+                    <div><input name="attr_move" type="number"/></div>
+                    <span>WOUND</span>
+                    <div><input name="attr_wound" type="number"/></div>
                     <span>BODY</span>
                     <div><input name="attr_body" type="number"/></div>
                     <span>EMP</span>
-                    <div><input name="attr_empathy_current" type="number" class="merge-input-right"/><input name="attr_empathy_max" type="number" class="merge-input-left"/></div>
+                    <div><input name="attr_emp" type="number" class="merge-input-right"/><input
+                            name="attr_emp_max" type="number" class="merge-input-left"/></div>
                     <span>Run</span>
                     <div><input name="attr_run" type="number" class="merge-input-right"/><input name="attr_run_max"
                                                                                                 type="number"
-                                                                                                class="merge-input-left" readonly/>
+                                                                                                class="merge-input-left"
+                                                                                                readonly/>
                     </div>
                     <span>Leap</span>
                     <div><input name="attr_leap" type="number" readonly/></div>
-                    <span>Lift</span>
-                    <div><input name="attr_lift" type="number" readonly/></div>
-                </div>
-                <div class="save">
-                    <div class="save-table">
-                        <div><button type="roll" value="/roll 1d10<@{save}" class="roll-btn">SAVE</button></div>
-                        <div><input name="attr_save" type="number" readonly/></div>
-                    </div>
-                    <div class="btm-table">
-                        <div>BTM</div>
-                        <div><input name="attr_btm" type="number" readonly/></div>
-                    </div>
+                    <button type="roll" value="/roll 1d10<@{save}" class="roll-btn">DEATH SAVE</button>
+                    <div><input name="attr_save" type="number" readonly/></div>
                 </div>
                 <div class="hitbox">
-                    <span class="location">Location</span>
-                    <button type="action" name="act_recalc-sp" class="armor-sp">Armor SP</button>
-                    <div class="hitbox-table">
-                        <div>Head</div>
-                        <div>Torso</div>
-                        <div>R. Arm</div>
-                        <div>L. Arm</div>
-                        <div>R. Leg</div>
-                        <div>L. Leg</div>
-                        <div><input name="attr_head_sp" type="number"/></div>
-                        <div><input name="attr_torso_sp" type="number"/></div>
-                        <div><input name="attr_rarm_sp" type="number"/></div>
-                        <div><input name="attr_larm_sp" type="number"/></div>
-                        <div><input name="attr_rleg_sp" type="number"/></div>
-                        <div><input name="attr_lleg_sp" type="number"/></div>
-                    </div>
-                </div>
-                <div class="wounds">
-                    <input type="radio" hidden name="attr_wounds" value="0"/>
-                    <div class="wounds-block">
-                        <div>Light</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="1"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="2"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="3"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="4"/><span></span>
-                        </div>
-                    </div>
-                    <div class="wounds-block">
-                        <div>Serious</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="5"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="6"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="7"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="8"/><span></span>
-                        </div>
-                    </div>
-                    <div class="wounds-block">
-                        <div>Critical</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="9"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="10"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="11"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="12"/><span></span>
-                        </div>
-                    </div>
-                    <div class="wounds-block">
-                        <div>Mortal 0</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="13"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="14"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="15"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="16"/><span></span>
-                        </div>
-                    </div>
-                    <div class="wounds-block">
-                        <div>Mortal 1</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="17"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="18"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="19"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="20"/><span></span>
-                        </div>
-                    </div>
-                    <div class="wounds-block">
-                        <div>Mortal 2</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="21"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="22"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="23"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="24"/><span></span>
-                        </div>
-                    </div>
-                    <div class="wounds-block">
-                        <div>Mortal 3</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="25"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="26"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="27"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="28"/><span></span>
-                        </div>
-                    </div>
-                    <div class="wounds-block">
-                        <div>Mortal 4</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="29"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="30"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="31"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="32"/><span></span>
-                        </div>
-                    </div>
-                    <div class="wounds-block">
-                        <div>Mortal 5</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="33"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="34"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="35"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="36"/><span></span>
-                        </div>
-                    </div>
-                    <div class="wounds-block">
-                        <div>Mortal 6</div>
-                        <div class="wounds-radio-block">
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="37"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="38"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="39"/><span></span>
-                            <input type="radio" class="wound-radio" name="attr_wounds" value="40"/><span></span>
-                        </div>
-                    </div>
+                    <table class="hitbox-table">
+                        <tr class="hitbox-table">
+                            <td class="hitbox-table">Location</td>
+                            <td class="hitbox-table">Head</td>
+                            <td class="hitbox-table">Torso</td>
+                            <td class="hitbox-table">R. Arm</td>
+                            <td class="hitbox-table">L. Arm</td>
+                            <td class="hitbox-table">R. Leg</td>
+                            <td class="hitbox-table">L. Leg</td>
+                        </tr>
+                        <tr class="hitbox-table">
+                            <td class="hitbox-table">
+                                <button type="action" name="act_recalc-sp" class="armor-sp">Armor SP</button>
+                            </td>
+                            <td class="hitbox-table"><input name="attr_head_sp" type="number"/></td>
+                            <td class="hitbox-table"><input name="attr_torso_sp" type="number"/></td>
+                            <td class="hitbox-table"><input name="attr_rarm_sp" type="number"/></td>
+                            <td class="hitbox-table"><input name="attr_larm_sp" type="number"/></td>
+                            <td class="hitbox-table"><input name="attr_rleg_sp" type="number"/></td>
+                            <td class="hitbox-table"><input name="attr_lleg_sp" type="number"/></td>
+                        </tr>
+                    </table>
                 </div>
             </div>
 
@@ -985,6 +948,7 @@ var TAS = TAS || (function(){
                 <input hidden name="attr_ev_sum"/>
                 <div class="armor-row">
                     <fieldset class="repeating_armor">
+                        <input hidden name="attr_armor_id">
                         <input class="options-flag" type="checkbox" name="attr_options-flag">
                         <div class="display">
                             <input type="checkbox" name="attr_equiped"/>
@@ -1005,12 +969,32 @@ var TAS = TAS || (function(){
                 <div>
                     <fieldset class="repeating_weapons">
                         <input class="options-flag" type="checkbox" name="attr_options-flag">
+                        <input hidden name="attr_weapon_id">
                         <div class="display">
                             <input type="text" name="attr_weapon_name" placeholder="Name" style="width: 100px;"/>
-                            <input type="text" name="attr_weapon_type" placeholder="Type" style="width: 50px"/>
+                            <!--<input type="text" name="attr_weapon_type" placeholder="Type" style="width: 50px"/>-->
+                            <select name="attr_weapon_type" placeholder="Type" style="width: 70px">
+                                <option value="P">Pistol</option>
+                                <option value="SMG">SMG</option>
+                                <option value="RIF">Rifle</option>
+                                <option value="SHT">Shotgun</option>
+                                <option value="SNGL">Single</option>
+                                <option value="AUTO">Auto</option>
+                            </select>
                             <input type="number" name="attr_weapon_accuracy" placeholder="WA"/>
                             <input type="text" name="attr_weapon_damage" placeholder="Damage" style="width: 60px;"/>
                             <input type="number" name="attr_weapon_shots" placeholder="#SHOTS" style="width: 60px;"/>
+                            <button name="roll_single_shot" type="roll" class="single-shot"
+                                    value="!shoot!!@{character_name}!!@{weapon_id}!!@{weapon_name}!!single">
+                            </button>
+                            <input type="radio" style="display:none;" name="attr_show_burst_auto" class="hide-burst-auto" value="0" checked/>
+                            <input type="radio" style="display:none;" name="attr_show_burst_auto" class="show-burst-auto" value="1"/>
+                            <button name="roll_burst" type="roll" class="burst"
+                                    value="!shoot!!@{character_name}!!@{weapon_id}!!@{weapon_name}!!burst">
+                            </button>
+                            <button name="roll_auto_fire" type="roll" class="auto-fire"
+                                    value="!shoot!!@{character_name}!!@{weapon_id}!!@{weapon_name}!!auto!!?{Number of targets}!!?{Range}!!@{weapon_rof}!!?{Hit number}">
+                            </button>
                         </div>
                         <div class="options">
                             <input type="text" name="attr_weapon_concealability" placeholder="CON"
@@ -1034,145 +1018,17 @@ var TAS = TAS || (function(){
                         <div>IP</div>
                     </div>
                     <div class="skill-row" style="font-weight: bolder;">ABILITIES</div>
-                    <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Authority}" class="roll-btn">Authority
-                    </button>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Authority Check}} {{Check=[[1d10 + @{cool} + @{Authority}]]}}' class='roll-btn'>Authority</button></div><div><input type='number' class='skill-input' name='attr_Authority'/></div><div><input type='number' class='skill-ip' name='attr_Authority_ip'></div><input type='hidden' name='attr_Authority_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Charismatic Leadership Check}} {{Check=[[1d10 + @{cool} + @{CharismaticLeadership}]]}}' class='roll-btn'>CharismaticLeadership</button></div><div><input type='number' class='skill-input' name='attr_CharismaticLeadership'/></div><div><input type='number' class='skill-ip' name='attr_CharismaticLeadership_ip'></div><input type='hidden' name='attr_CharismaticLeadership_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Combat Sense Check}} {{Check=[[1d10 + @{ref_modified} + @{CombatSense}]]}}' class='roll-btn'>Combat Sense</button></div><div><input type='number' class='skill-input' name='attr_CombatSense'/></div><div><input type='number' class='skill-ip' name='attr_CombatSense_ip'></div><input type='hidden' name='attr_CombatSense_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Credibility Check}} {{Check=[[1d10 + @{int} + @{Credibility}]]}}' class='roll-btn'>Credibility</button></div><div><input type='number' class='skill-input' name='attr_Credibility'/></div><div><input type='number' class='skill-ip' name='attr_Credibility_ip'></div><input type='hidden' name='attr_Credibility_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Family Check}} {{Check=[[1d10 + @{int} + @{Family}]]}}' class='roll-btn'>Family</button></div><div><input type='number' class='skill-input' name='attr_Family'/></div><div><input type='number' class='skill-ip' name='attr_Family_ip'></div><input type='hidden' name='attr_Family_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Interface Check}} {{Check=[[1d10 + @{int} + @{Interface}]]}}' class='roll-btn'>Interface</button></div><div><input type='number' class='skill-input' name='attr_Interface'/></div><div><input type='number' class='skill-ip' name='attr_Interface_ip'></div><input type='hidden' name='attr_Interface_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Jury Rig Check}} {{Check=[[@{JuryRig}d6]]}}' class='roll-btn'>Jury Rig</button></div><div><input type='number' class='skill-input' name='attr_JuryRig'/></div><div><input type='number' class='skill-ip' name='attr_JuryRig_ip'></div><input type='hidden' name='attr_JuryRig_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Medical Tech Check}} {{Check=[[1d10 + @{int} + @{MedicalTech}]]}}' class='roll-btn'>Medical Tech</button></div><div><input type='number' class='skill-input' name='attr_MedicalTech'/></div><div><input type='number' class='skill-ip' name='attr_MedicalTech_ip'></div><input type='hidden' name='attr_MedicalTech_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Resources Check}} {{Check=[[1d10 + @{int} + @{Resources}]]}}' class='roll-btn'>Resources</button></div><div><input type='number' class='skill-input' name='attr_Resources'/></div><div><input type='number' class='skill-ip' name='attr_Resources_ip'></div><input type='hidden' name='attr_Resources_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Streetdeal Check}} {{Check=[[1d10 + @{cool} + @{Streetdeal}]]}}' class='roll-btn'>Streetdeal</button></div><div><input type='number' class='skill-input' name='attr_Streetdeal'/></div><div><input type='number' class='skill-ip' name='attr_Streetdeal_ip'></div><input type='hidden' name='attr_Streetdeal_uses'></div>
                 </div>
-                    <div><input type="number" class="skill-input" name="attr_Authority"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_authority_ip"></div>
-                    <input type="hidden" name="attr_authority_uses">                    </div>
-                <div class="skill-row">                        <div><button type="roll" value="/roll 1d10 + @{Cool} + @{cLeadership}" class="roll-btn">C. Leadership</button></div><div><input type="number" class="skill-input" name="attr_cLeadership"/></div>                       <div><input type="number" class="skill-ip" name="attr_cLeadership_ip"></div>
-                    <input type="hidden" name="attr_cLeadership_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Reflex} + @{Combat-sense}" class="roll-btn">Combat Sense
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_combat-sense"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Combat-sense_ip"></div>
-                    <input type="hidden" name="attr_Combat-sense_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Credibility}" class="roll-btn">Credibility
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Credibility"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Leadership_ip"></div>
-                    <input type="hidden" name="attr_Credibility_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Family}" class="roll-btn">Family
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Family"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Family_ip"></div>
-                    <input type="hidden" name="attr_Family_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Interface}" class="roll-btn">Interface
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Interface"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Interface_ip"></div>
-                    <input type="hidden" name="attr_Interface_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll @{rig}d6" class="roll-btn">Jury Rig</button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_rig"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_rig_ip"></div>
-                    <input type="hidden" name="attr_rig_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{medtech}" class="roll-btn">Medical Tech
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_medtech"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_medtech_ip"></div>
-                    <input type="hidden" name="attr_medtech_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Resources}" class="roll-btn">Resources
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Resources"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Resources_ip"></div>
-                    <input type="hidden" name="attr_Resources_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Streetdeal}" class="roll-btn">Streetdeal
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Streetdeal"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Streetdeal_ip"></div>
-                    <input type="hidden" name="attr_Streetdeal_uses">                    </div>
-                <div class="skill-row" style="font-weight: bold;">ATTR</div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{attractiveness} + @{grooming}" class="roll-btn">Grooming
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_grooming"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_grooming_ip"></div>
-                    <input type="hidden" name="attr_grooming_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{attractiveness} + @{style}" class="roll-btn">Wardrobe & Style
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_style"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_style_ip"></div>
-                    <input type="hidden" name="attr_style_uses">                    </div>
-                <div class="skill-row" style="font-weight: bold;">BODY</div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{body} + @{Endurance}" class="roll-btn">Endurance
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Endurance"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Endurance_ip"></div>
-                    <input type="hidden" name="attr_Endurance_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{body} + @{strfeat}" class="roll-btn">Strength
-                        Feat
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_strfeat"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_strfeat_ip"></div>
-                    <input type="hidden" name="attr_strfeat_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{body} + @{Swimming}" class="roll-btn">Swimming
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Swimming"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Swimming_ip"></div>
-                    <input type="hidden" name="attr_Swimming_uses">                    </div>
-                <div class="skill-row" style="font-weight: bold;">COOL/WILL</div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Interrogation}" class="roll-btn">Interrogation
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Interrogation"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Interrogation_ip"></div>
-                    <input type="hidden" name="attr_Interrogation_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Intimidate}" class="roll-btn">Intimidate
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Intimidate"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Intimidate_ip"></div>
-                    <input type="hidden" name="attr_Intimidate_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Oratory}" class="roll-btn">Oratory
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Oratory"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Oratory_ip"></div>
-                    <input type="hidden" name="attr_Oratory_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Resist}" class="roll-btn">Resist T/D
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Resist"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Resist_ip"></div>
-                    <input type="hidden" name="attr_Resist_uses">                    </div>
-                <div class="skill-row">                        <div>
-                    <button type="roll" value="/roll 1d10 + @{Cool} + @{Streetwise}" class="roll-btn">Streetwise
-                    </button>
-                </div>
-                    <div><input type="number" class="skill-input" name="attr_Streetwise"/></div>
-                    <div><input type="number" class="skill-ip" name="attr_Streetwise_ip"></div>
-                    <input type="hidden" name="attr_Streetwise_uses">                    </div>
-            </div>
                 <div class="skills-table-column">
                     <div class="skill-row header">
                         <div>Skill name</div>
@@ -1180,390 +1036,23 @@ var TAS = TAS || (function(){
                         <div>IP</div>
                     </div>
                     <div class="skill-row" style="font-weight: bold;">INT</div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{anthropology}"
-                                class="roll-btn">Anthropology
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_anthropology"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_anthropology_ip"></div>
-                        <input type="hidden" name="attr_anthropology_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Awareness}" class="roll-btn">Awareness/Notice
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Awareness"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Awareness_ip"></div>
-                        <input type="hidden" name="attr_Awareness_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Biology}" class="roll-btn">Biology
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Biology"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Biology_ip"></div>
-                        <input type="hidden" name="attr_Biology_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Botany}" class="roll-btn">Botany
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Botany"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Botany_ip"></div>
-                        <input type="hidden" name="attr_Botany_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Chemistry}" class="roll-btn">Chemistry
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Chemistry"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Chemistry_ip"></div>
-                        <input type="hidden" name="attr_Chemistry_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Composition}" class="roll-btn">Composition
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Composition"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Composition_ip"></div>
-                        <input type="hidden" name="attr_Composition_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Diagnose}" class="roll-btn">Diagnose Illness
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Diagnose"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Diagnose_ip"></div>
-                        <input type="hidden" name="attr_Diagnose_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Education}" class="roll-btn">Education&Knowledge
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Education"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Education_ip"></div>
-                        <input type="hidden" name="attr_Education_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Expert}" class="roll-btn">Expert
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Expert"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Expert_ip"></div>
-                        <input type="hidden" name="attr_Expert_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Gamble}" class="roll-btn">Gamble
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Gamble"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Gamble_ip"></div>
-                        <input type="hidden" name="attr_Gamble_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Accounting}" class="roll-btn">Accounting
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Accounting"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Accounting_ip"></div>
-                        <input type="hidden" name="attr_Accounting_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Geology}" class="roll-btn">Geology
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Geology"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Geology_ip"></div>
-                        <input type="hidden" name="attr_Geology_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Hide}" class="roll-btn">Hide/Evade
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Hide"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Hide_ip"></div>
-                        <input type="hidden" name="attr_Hide_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{History}" class="roll-btn">History
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_History"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_History_ip"></div>
-                        <input type="hidden" name="attr_History_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Language}" class="roll-btn">Language
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Language"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Language_ip"></div>
-                        <input type="hidden" name="attr_Language_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Library}" class="roll-btn">Library Search
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Library"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Library_ip"></div>
-                        <input type="hidden" name="attr_Library_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Mathematics}" class="roll-btn">Mathematics
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Mathematics"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Mathematics_ip"></div>
-                        <input type="hidden" name="attr_Mathematics_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Physics}" class="roll-btn">Physics
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Physics"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Physics_ip"></div>
-                        <input type="hidden" name="attr_Physics_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Programming}" class="roll-btn">Programming
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Programming"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Programming_ip"></div>
-                        <input type="hidden" name="attr_Programming_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Shadow}" class="roll-btn">Shadow/Track
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Shadow"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Shadow_ip"></div>
-                        <input type="hidden" name="attr_Shadow_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Stock}" class="roll-btn">Stock
-                            Market
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Stock"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Stock_ip"></div>
-                        <input type="hidden" name="attr_Stock_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{System}" class="roll-btn">System Know
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_System"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_System_ip"></div>
-                        <input type="hidden" name="attr_System_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Teaching}" class="roll-btn">Teaching
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Teaching"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Teaching_ip"></div>
-                        <input type="hidden" name="attr_Teaching_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Wilderness}" class="roll-btn">Wilderness Surv
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Wilderness"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Wilderness_ip"></div>
-                        <input type="hidden" name="attr_Wilderness_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Intelligence} + @{Zoology}" class="roll-btn">Zoology
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Zoology"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Zoology_ip"></div>
-                        <input type="hidden" name="attr_Zoology_uses">                    </div>
-                </div>
-                <div class="skills-table-column">
-                    <div class="skill-row header">
-                        <div>Skill name</div>
-                        <div>Level</div>
-                        <div>IP</div>
-                    </div>
-                    <div class="skill-row" style="font-weight: bold;">REF</div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Archery}" class="roll-btn">Archery
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Archery"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Archery_ip"></div>
-                        <input type="hidden" name="attr_Archery_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Athletics}" class="roll-btn">Athletics
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Athletics"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Athletics_ip"></div>
-                        <input type="hidden" name="attr_Athletics_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Brawling}" class="roll-btn">Brawling
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Brawling"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Brawling_ip"></div>
-                        <input type="hidden" name="attr_Brawling_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Dance}" class="roll-btn">Dance
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Dance"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Dance_ip"></div>
-                        <input type="hidden" name="attr_Dance_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Dodge}" class="roll-btn">Dodge &
-                            Escape
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Dodge"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Dodge_ip"></div>
-                        <input type="hidden" name="attr_Dodge_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Driving}" class="roll-btn">Driving
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Driving"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Driving_ip"></div>
-                        <input type="hidden" name="attr_Driving_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Fencing}" class="roll-btn">Fencing
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Fencing"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Fencing_ip"></div>
-                        <input type="hidden" name="attr_Fencing_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Handgun}" class="roll-btn">Handgun
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Handgun"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Handgun_ip"></div>
-                        <input type="hidden" name="attr_Handgun_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Heavy}" class="roll-btn">Heavy
-                            Weapons
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Heavy"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Heavy_ip"></div>
-                        <input type="hidden" name="attr_Heavy_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Martial}" class="roll-btn">Martial
-                            Art 1
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Martial"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Martial_ip"></div>
-                        <input type="hidden" name="attr_Martial_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Melee}" class="roll-btn">Melee
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Melee"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Melee_ip"></div>
-                        <input type="hidden" name="attr_Melee_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Motorcycle}" class="roll-btn">Motorcycle
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Motorcycle"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Motorcycle_ip"></div>
-                        <input type="hidden" name="attr_Motorcycle_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Gyro}" class="roll-btn">Pilot
-                            (Gyro)
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Gyro"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Gyro_ip"></div>
-                        <input type="hidden" name="attr_Gyro_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{FixedWing}" class="roll-btn">Pilot
-                            (Fixed Wing)
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_FixedWing"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_FixedWing_ip"></div>
-                        <input type="hidden" name="attr_FixedWing_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Dirigible}" class="roll-btn">Pilot
-                            (Dirigible)
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Dirigible"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Dirigible_ip"></div>
-                        <input type="hidden" name="attr_Dirigible_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Thrust}" class="roll-btn">Pilot
-                            (Vect.Thrust)
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Thrust"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Thrust_ip"></div>
-                        <input type="hidden" name="attr_Thrust_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Rifle}" class="roll-btn">Rifle
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Rifle"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Rifle_ip"></div>
-                        <input type="hidden" name="attr_Rifle_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Stealth}" class="roll-btn">Stealth
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Stealth"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Stealth_ip"></div>
-                        <input type="hidden" name="attr_Stealth_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Submachinegun}" class="roll-btn">Submachinegun
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Submachinegun"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Submachinegun_ip"></div>
-                        <input type="hidden" name="attr_Submachinegun_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Reflex} + @{Machinery}" class="roll-btn">
-                            Hvy.Machinery
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Machinery"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Machinery_ip"></div>
-                        <input type="hidden" name="attr_Machinery_uses">                    </div>
-                    <div class="skill-row" style="font-weight: bold;">EMPATHY</div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Perception}" class="roll-btn">Human
-                            Perception
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Perception"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Perception_ip"></div>
-                        <input type="hidden" name="attr_Perception_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Interview}" class="roll-btn">Interview
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Interview"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Interview_ip"></div>
-                        <input type="hidden" name="attr_Interview_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Leadership}" class="roll-btn">Leadership
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Leadership"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Leadership_ip"></div>
-                        <input type="hidden" name="attr_Leadership_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Seduction}" class="roll-btn">Seduction
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Seduction"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Seduction_ip"></div>
-                        <input type="hidden" name="attr_Seduction_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Social}" class="roll-btn">Social
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Social"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Social_ip"></div>
-                        <input type="hidden" name="attr_Social_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Persuasion}" class="roll-btn">Persuasion & Fast Talk
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Persuasion"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Persuasion_ip"></div>
-                        <input type="hidden" name="attr_Persuasion_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Empathy} + @{Perform}" class="roll-btn">Perform
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Perform"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Perform_ip"></div>
-                        <input type="hidden" name="attr_Perform_uses">                    </div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Perception Check}} {{Check=[[1d10 + @{int} + @{Perception}]]}}' class='roll-btn'>Perception</button></div><div><input type='number' class='skill-input' name='attr_Perception'/></div><div><input type='number' class='skill-ip' name='attr_Perception_ip'></div><input type='hidden' name='attr_Perception_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Tracking Check}} {{Check=[[1d10 + @{int} + @{Tracking}]]}}' class='roll-btn'>Tracking</button></div><div><input type='number' class='skill-input' name='attr_Tracking'/></div><div><input type='number' class='skill-ip' name='attr_Tracking_ip'></div><input type='hidden' name='attr_Tracking_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Education Check}} {{Check=[[1d10 + @{int} + @{Education}]]}}' class='roll-btn'>Education</button></div><div><input type='number' class='skill-input' name='attr_Education'/></div><div><input type='number' class='skill-ip' name='attr_Education_ip'></div><input type='hidden' name='attr_Education_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=LocalExpert Check}} {{Check=[[1d10 + @{int} + @{LocalExpert}]]}}' class='roll-btn'>LocalExpert</button></div><div><input type='number' class='skill-input' name='attr_LocalExpert'/></div><div><input type='number' class='skill-ip' name='attr_LocalExpert_ip'></div><input type='hidden' name='attr_LocalExpert_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=DiagnoseIllness Check}} {{Check=[[1d10 + @{int} + @{DiagnoseIllness}]]}}' class='roll-btn'>DiagnoseIllness</button></div><div><input type='number' class='skill-input' name='attr_DiagnoseIllness'/></div><div><input type='number' class='skill-ip' name='attr_DiagnoseIllness_ip'></div><input type='hidden' name='attr_DiagnoseIllness_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Gamble Check}} {{Check=[[1d10 + @{int} + @{Gamble}]]}}' class='roll-btn'>Gamble</button></div><div><input type='number' class='skill-input' name='attr_Gamble'/></div><div><input type='number' class='skill-ip' name='attr_Gamble_ip'></div><input type='hidden' name='attr_Gamble_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=HideEvade Check}} {{Check=[[1d10 + @{int} + @{HideEvade}]]}}' class='roll-btn'>HideEvade</button></div><div><input type='number' class='skill-input' name='attr_HideEvade'/></div><div><input type='number' class='skill-ip' name='attr_HideEvade_ip'></div><input type='hidden' name='attr_HideEvade_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Language Check}} {{Check=[[1d10 + @{int} + @{Language}]]}}' class='roll-btn'>Language</button></div><div><input type='number' class='skill-input' name='attr_Language'/></div><div><input type='number' class='skill-ip' name='attr_Language_ip'></div><input type='hidden' name='attr_Language_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Programming Check}} {{Check=[[1d10 + @{int} + @{Programming}]]}}' class='roll-btn'>Programming</button></div><div><input type='number' class='skill-input' name='attr_Programming'/></div><div><input type='number' class='skill-ip' name='attr_Programming_ip'></div><input type='hidden' name='attr_Programming_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=SystemKnowledge Check}} {{Check=[[1d10 + @{int} + @{SystemKnowledge}]]}}' class='roll-btn'>SystemKnowledge</button></div><div><input type='number' class='skill-input' name='attr_SystemKnowledge'/></div><div><input type='number' class='skill-ip' name='attr_SystemKnowledge_ip'></div><input type='hidden' name='attr_SystemKnowledge_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=WildernessSurvival Check}} {{Check=[[1d10 + @{int} + @{WildernessSurvival}]]}}' class='roll-btn'>WildernessSurvival</button></div><div><input type='number' class='skill-input' name='attr_WildernessSurvival'/></div><div><input type='number' class='skill-ip' name='attr_WildernessSurvival_ip'></div><input type='hidden' name='attr_WildernessSurvival_uses'></div>
+                    <div class="skill-row" style="font-weight: bold;">COOL</div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Bribery Check}} {{Check=[[1d10 + @{cool} + @{Bribery}]]}}' class='roll-btn'>Bribery</button></div><div><input type='number' class='skill-input' name='attr_Bribery'/></div><div><input type='number' class='skill-ip' name='attr_Bribery_ip'></div><input type='hidden' name='attr_Bribery_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Interrogation Check}} {{Check=[[1d10 + @{cool} + @{Interrogation}]]}}' class='roll-btn'>Interrogation</button></div><div><input type='number' class='skill-input' name='attr_Interrogation'/></div><div><input type='number' class='skill-ip' name='attr_Interrogation_ip'></div><input type='hidden' name='attr_Interrogation_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Persuasion Check}} {{Check=[[1d10 + @{cool} + @{Persuasion}]]}}' class='roll-btn'>Persuasion</button></div><div><input type='number' class='skill-input' name='attr_Persuasion'/></div><div><input type='number' class='skill-ip' name='attr_Persuasion_ip'></div><input type='hidden' name='attr_Persuasion_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Intimidate Check}} {{Check=[[1d10 + @{cool} + @{Intimidate}]]}}' class='roll-btn'>Intimidate</button></div><div><input type='number' class='skill-input' name='attr_Intimidate'/></div><div><input type='number' class='skill-ip' name='attr_Intimidate_ip'></div><input type='hidden' name='attr_Intimidate_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Streetwise Check}} {{Check=[[1d10 + @{cool} + @{Streetwise}]]}}' class='roll-btn'>Streetwise</button></div><div><input type='number' class='skill-input' name='attr_Streetwise'/></div><div><input type='number' class='skill-ip' name='attr_Streetwise_ip'></div><input type='hidden' name='attr_Streetwise_uses'></div>
                 </div>
                 <div class="skills-table-column">
                     <div class="skill-row header">
@@ -1572,159 +1061,49 @@ var TAS = TAS || (function(){
                         <div>IP</div>
                     </div>
                     <div class="skill-row" style="font-weight: bold;">TECH</div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Aero}" class="roll-btn">Aero Tech
-                        </button>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=BasicTech Check}} {{Check=[[1d10 + @{tech} + @{BasicTech}]]}}' class='roll-btn'>BasicTech</button></div><div><input type='number' class='skill-input' name='attr_BasicTech'/></div><div><input type='number' class='skill-ip' name='attr_BasicTech_ip'></div><input type='hidden' name='attr_BasicTech_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Cybertech Check}} {{Check=[[1d10 + @{tech} + @{Cybertech}]]}}' class='roll-btn'>Cybertech</button></div><div><input type='number' class='skill-input' name='attr_Cybertech'/></div><div><input type='number' class='skill-ip' name='attr_Cybertech_ip'></div><input type='hidden' name='attr_Cybertech_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=FirstAid Check}} {{Check=[[1d10 + @{tech} + @{FirstAid}]]}}' class='roll-btn'>FirstAid</button></div><div><input type='number' class='skill-input' name='attr_FirstAid'/></div><div><input type='number' class='skill-ip' name='attr_FirstAid_ip'></div><input type='hidden' name='attr_FirstAid_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Demolitions Check}} {{Check=[[1d10 + @{tech} + @{Demolitions}]]}}' class='roll-btn'>Demolitions</button></div><div><input type='number' class='skill-input' name='attr_Demolitions'/></div><div><input type='number' class='skill-ip' name='attr_Demolitions_ip'></div><input type='hidden' name='attr_Demolitions_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Disguise Check}} {{Check=[[1d10 + @{tech} + @{Disguise}]]}}' class='roll-btn'>Disguise</button></div><div><input type='number' class='skill-input' name='attr_Disguise'/></div><div><input type='number' class='skill-ip' name='attr_Disguise_ip'></div><input type='hidden' name='attr_Disguise_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Electronics Check}} {{Check=[[1d10 + @{tech} + @{Electronics}]]}}' class='roll-btn'>Electronics</button></div><div><input type='number' class='skill-input' name='attr_Electronics'/></div><div><input type='number' class='skill-ip' name='attr_Electronics_ip'></div><input type='hidden' name='attr_Electronics_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Forgery Check}} {{Check=[[1d10 + @{tech} + @{Forgery}]]}}' class='roll-btn'>Forgery</button></div><div><input type='number' class='skill-input' name='attr_Forgery'/></div><div><input type='number' class='skill-ip' name='attr_Forgery_ip'></div><input type='hidden' name='attr_Forgery_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=PickLock Check}} {{Check=[[1d10 + @{tech} + @{PickLock}]]}}' class='roll-btn'>PickLock</button></div><div><input type='number' class='skill-input' name='attr_PickLock'/></div><div><input type='number' class='skill-ip' name='attr_PickLock_ip'></div><input type='hidden' name='attr_PickLock_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=WeaponsTech Check}} {{Check=[[1d10 + @{tech} + @{WeaponsTech}]]}}' class='roll-btn'>WeaponsTech</button></div><div><input type='number' class='skill-input' name='attr_WeaponsTech'/></div><div><input type='number' class='skill-ip' name='attr_WeaponsTech_ip'></div><input type='hidden' name='attr_WeaponsTech_uses'></div>
+                    <div class="skill-row" style="font-weight: bold;">DEX</div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Brawling Check}} {{Check=[[1d10 + @{dex} + @{Brawling}]]}}' class='roll-btn'>Brawling</button></div><div><input type='number' class='skill-input' name='attr_Brawling'/></div><div><input type='number' class='skill-ip' name='attr_Brawling_ip'></div><input type='hidden' name='attr_Brawling_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Evasion Check}} {{Check=[[1d10 + @{dex} + @{Evasion}]]}}' class='roll-btn'>Evasion</button></div><div><input type='number' class='skill-input' name='attr_Evasion'/></div><div><input type='number' class='skill-ip' name='attr_Evasion_ip'></div><input type='hidden' name='attr_Evasion_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Melee Weapon Check}} {{Check=[[1d10 + @{dex} + @{Melee Weapon}]]}}' class='roll-btn'>Melee Weapon</button></div><div><input type='number' class='skill-input' name='attr_Melee Weapon'/></div><div><input type='number' class='skill-ip' name='attr_Melee Weapon_ip'></div><input type='hidden' name='attr_Melee Weapon_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Athletics Check}} {{Check=[[1d10 + @{dex} + @{Athletics}]]}}' class='roll-btn'>Athletics</button></div><div><input type='number' class='skill-input' name='attr_Athletics'/></div><div><input type='number' class='skill-ip' name='attr_Athletics_ip'></div><input type='hidden' name='attr_Athletics_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Fencing Check}} {{Check=[[1d10 + @{dex} + @{Fencing}]]}}' class='roll-btn'>Fencing</button></div><div><input type='number' class='skill-input' name='attr_Fencing'/></div><div><input type='number' class='skill-ip' name='attr_Fencing_ip'></div><input type='hidden' name='attr_Fencing_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Stealth Check}} {{Check=[[1d10 + @{dex} + @{Stealth}]]}}' class='roll-btn'>Stealth</button></div><div><input type='number' class='skill-input' name='attr_Stealth'/></div><div><input type='number' class='skill-ip' name='attr_Stealth_ip'></div><input type='hidden' name='attr_Stealth_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Pick Pocket Check}} {{Check=[[1d10 + @{dex} + @{PickPocket}]]}}' class='roll-btn'>PickPocket</button></div><div><input type='number' class='skill-input' name='attr_PickPocket'/></div><div><input type='number' class='skill-ip' name='attr_PickPocket_ip'></div><input type='hidden' name='attr_PickPocket_uses'></div>
+                </div>
+                <div class="skills-table-column">
+                    <div class="skill-row header">
+                        <div>Skill name</div>
+                        <div>Level</div>
+                        <div>IP</div>
                     </div>
-                        <div><input type="number" class="skill-input" name="attr_Aero"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Aero_ip"></div>
-                        <input type="hidden" name="attr_Aero_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{AV}" class="roll-btn">AV Tech</button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_AV"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_AV_ip"></div>
-                        <input type="hidden" name="attr_AV_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Basic}" class="roll-btn">Basic Tech
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Basic"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Basic_ip"></div>
-                        <input type="hidden" name="attr_Basic_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Cryotank}" class="roll-btn">Cryotank
-                            Op
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Cryotank"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Cryotank_ip"></div>
-                        <input type="hidden" name="attr_Cryotank_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Cyberdeck}" class="roll-btn">Cyberdeck
-                            Design
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Cyberdeck"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Cyberdeck_ip"></div>
-                        <input type="hidden" name="attr_Cyberdeck_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Cyber}" class="roll-btn">Cyber Tech
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Cyber"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Cyber_ip"></div>
-                        <input type="hidden" name="attr_Cyber_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Demolitions}" class="roll-btn">Demolitions
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Demolitions"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Demolitions_ip"></div>
-                        <input type="hidden" name="attr_Demolitions_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Disguise}" class="roll-btn">Disguise
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Disguise"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Disguise_ip"></div>
-                        <input type="hidden" name="attr_Disguise_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Electronics}" class="roll-btn">Electronics
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Electronics"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Electronics_ip"></div>
-                        <input type="hidden" name="attr_Electronics_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Security}" class="roll-btn">Elect.
-                            Security
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Security"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Security_ip"></div>
-                        <input type="hidden" name="attr_Security_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{FirstAid}" class="roll-btn">First Aid
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_FirstAid"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_FirstAid_ip"></div>
-                        <input type="hidden" name="attr_FirstAid_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Forgery}" class="roll-btn">Forgery
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Forgery"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Forgery_ip"></div>
-                        <input type="hidden" name="attr_Leadership_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Gyro}" class="roll-btn">Gyro Tech
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Gyro"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Gyro_ip"></div>
-                        <input type="hidden" name="attr_Gyro_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Paint}" class="roll-btn">Paint or
-                            Draw
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Paint"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Paint_ip"></div>
-                        <input type="hidden" name="attr_Paint_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Photo}" class="roll-btn">Photo & Film
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Photo"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Photo_ip"></div>
-                        <input type="hidden" name="attr_Photo_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Pharmacuticals}" class="roll-btn">Pharmacuticals
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Pharmacuticals"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Pharmacuticals_ip"></div>
-                        <input type="hidden" name="attr_Pharmacuticals_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{PickLock}" class="roll-btn">Pick Lock
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_PickLock"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_PickLock_ip"></div>
-                        <input type="hidden" name="attr_PickLock_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{PickPocket}" class="roll-btn">Pick
-                            Pocket
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_PickPocket"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_PickPocket_ip"></div>
-                        <input type="hidden" name="attr_PickPocket_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Instrument}" class="roll-btn">Play
-                            Instrument
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Instrument"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Instrument_ip"></div>
-                        <input type="hidden" name="attr_Instrument_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Weaponsmith}" class="roll-btn">Weaponsmith
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Weaponsmith"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Weaponsmith_ip"></div>
-                        <input type="hidden" name="attr_Weaponsmith_uses">                    </div>
-                    <div class="skill-row">                        <div>
-                        <button type="roll" value="/roll 1d10 + @{Tech} + @{Weapons}" class="roll-btn">Weapons
-                            Tech
-                        </button>
-                    </div>
-                        <div><input type="number" class="skill-input" name="attr_Weapons"/></div>
-                        <div><input type="number" class="skill-ip" name="attr_Weapons_ip"></div>
-                        <input type="hidden" name="attr_Weapons_uses">                    </div>
+                    <div class="skill-row" style="font-weight: bold;">EMP</div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Conversation Check}} {{Check=[[1d10 + @{emp} + @{Conversation}]]}}' class='roll-btn'>Conversation</button></div><div><input type='number' class='skill-input' name='attr_Conversation'/></div><div><input type='number' class='skill-ip' name='attr_Conversation_ip'></div><input type='hidden' name='attr_Conversation_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=HumanPerception Check}} {{Check=[[1d10 + @{emp} + @{HumanPerception}]]}}' class='roll-btn'>HumanPerception</button></div><div><input type='number' class='skill-input' name='attr_HumanPerception'/></div><div><input type='number' class='skill-ip' name='attr_HumanPerception_ip'></div><input type='hidden' name='attr_HumanPerception_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=PlayInstrument Check}} {{Check=[[1d10 + @{emp} + @{PlayInstrument}]]}}' class='roll-btn'>PlayInstrument</button></div><div><input type='number' class='skill-input' name='attr_PlayInstrument'/></div><div><input type='number' class='skill-ip' name='attr_PlayInstrument_ip'></div><input type='hidden' name='attr_PlayInstrument_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Interview Check}} {{Check=[[1d10 + @{emp} + @{Interview}]]}}' class='roll-btn'>Interview</button></div><div><input type='number' class='skill-input' name='attr_Interview'/></div><div><input type='number' class='skill-ip' name='attr_Interview_ip'></div><input type='hidden' name='attr_Interview_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Leadership Check}} {{Check=[[1d10 + @{emp} + @{Leadership}]]}}' class='roll-btn'>Leadership</button></div><div><input type='number' class='skill-input' name='attr_Leadership'/></div><div><input type='number' class='skill-ip' name='attr_Leadership_ip'></div><input type='hidden' name='attr_Leadership_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Seduction Check}} {{Check=[[1d10 + @{emp} + @{Seduction}]]}}' class='roll-btn'>Seduction</button></div><div><input type='number' class='skill-input' name='attr_Seduction'/></div><div><input type='number' class='skill-ip' name='attr_Seduction_ip'></div><input type='hidden' name='attr_Seduction_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Social Check}} {{Check=[[1d10 + @{emp} + @{Social}]]}}' class='roll-btn'>Social</button></div><div><input type='number' class='skill-input' name='attr_Social'/></div><div><input type='number' class='skill-ip' name='attr_Social_ip'></div><input type='hidden' name='attr_Social_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Persuasion&Fast Talk Check}} {{Check=[[1d10 + @{emp} + @{PersuasionFastTalk}]]}}' class='roll-btn'>Persuasion&Fast Talk</button></div><div><input type='number' class='skill-input' name='attr_PersuasionFastTalk'/></div><div><input type='number' class='skill-ip' name='attr_PersuasionFastTalk_ip'></div><input type='hidden' name='attr_PersuasionFastTalk_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Perform Check}} {{Check=[[1d10 + @{emp} + @{Perform}]]}}' class='roll-btn'>Perform</button></div><div><input type='number' class='skill-input' name='attr_Perform'/></div><div><input type='number' class='skill-ip' name='attr_Perform_ip'></div><input type='hidden' name='attr_Perform_uses'></div>
+                    <div class="skill-row" style="font-weight: bold;">BODY</div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Endurance Check}} {{Check=[[1d10 + @{body} + @{Endurance}]]}}' class='roll-btn'>Endurance</button></div><div><input type='number' class='skill-input' name='attr_Endurance'/></div><div><input type='number' class='skill-ip' name='attr_Endurance_ip'></div><input type='hidden' name='attr_Endurance_uses'></div>
+                    <div class="skill-row" style="font-weight: bold;">WILL</div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Concentration Check}} {{Check=[[1d10 + @{will} + @{Concentration}]]}}' class='roll-btn'>Concentration</button></div><div><input type='number' class='skill-input' name='attr_Concentration'/></div><div><input type='number' class='skill-ip' name='attr_Concentration_ip'></div><input type='hidden' name='attr_Concentration_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Resist Torture/Drugs Check}} {{Check=[[1d10 + @{will} + @{ResistTortureDrugs}]]}}' class='roll-btn'>Resist Torture/Drugs</button></div><div><input type='number' class='skill-input' name='attr_ResistTortureDrugs'/></div><div><input type='number' class='skill-ip' name='attr_ResistTortureDrugs_ip'></div><input type='hidden' name='attr_ResistTortureDrugs_uses'></div>
+                    <div class="skill-row" style="font-weight: bold;">REF</div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Marksmanship Check}} {{Check=[[1d10 + @{ref_modified} + @{Marksmanship}]]}}' class='roll-btn'>Marksmanship</button></div><div><input type='number' class='skill-input' name='attr_Marksmanship'/></div><div><input type='number' class='skill-ip' name='attr_Marksmanship_ip'></div><input type='hidden' name='attr_Marksmanship_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Driving Check}} {{Check=[[1d10 + @{ref_modified} + @{Driving}]]}}' class='roll-btn'>Driving</button></div><div><input type='number' class='skill-input' name='attr_Driving'/></div><div><input type='number' class='skill-ip' name='attr_Driving_ip'></div><input type='hidden' name='attr_Driving_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Piloting Check}} {{Check=[[1d10 + @{ref_modified} + @{Piloting}]]}}' class='roll-btn'>Piloting</button></div><div><input type='number' class='skill-input' name='attr_Piloting'/></div><div><input type='number' class='skill-ip' name='attr_Piloting_ip'></div><input type='hidden' name='attr_Piloting_uses'></div>
                 </div>
             </div>
         </div>
@@ -1734,6 +1113,7 @@ var TAS = TAS || (function(){
                 <input hidden name="attr_gear_all_mods"/>
                 <div class="gear-row">
                     <fieldset class="repeating_gear">
+                        <input hidden name="attr_gear_id">
                         <input class="options-flag" type="checkbox" name="attr_options-flag">
                         <div class="display">
                             <input type="text" name="attr_gear_type" placeholder="Type" style="width: 175px;"/>
@@ -1752,6 +1132,7 @@ var TAS = TAS || (function(){
                 <input hidden name="attr_cyber_all_mods"/>
                 <div>
                     <fieldset class="repeating_cyber">
+                        <input hidden name="attr_cyber_id">
                         <input class="options-flag" type="checkbox" name="attr_options-flag">
                         <div class="display">
                             <input type="text" name="attr_cyber_type" placeholder="Type" style="width: 175px;"/>
@@ -1767,7 +1148,7 @@ var TAS = TAS || (function(){
         </div>
         <div class="tab-content life-path-tab">
             <div class="section">
-                <textarea>Put your lifepath things here</textarea>
+                <textarea name="attr_lifepath">Put your lifepath things here</textarea>
             </div>
         </div>
     </div>

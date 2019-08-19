@@ -1,23 +1,17 @@
 
-on("change:movement change:body", function() {
-    getAttrs(["movement", "body"], function(values) {
+on("change:move change:body", function() {
+    getAttrs(["move", "body"], function(values) {
         console.log(values);
-        let mv = values.movement*3;
-        let btmVar;
-        switch (values.body) {
-            case "0": case "1": case "2": btmVar = 0; break;
-            case "3": case "4": btmVar = 1; break;
-            case "5": case "6": case "7": btmVar = 2; break;
-            case "8": case "9": btmVar = 3; break;
-            case "10": btmVar = 4; break;
-        }
+        let mv = values.move*2;
+
         setAttrs({
             run_max: mv,
             run: mv,
-            leap: mv/4,
+            leap: mv/3,
             save: values.body,
-            btm: btmVar,
-            lift: values.body*40
+            lift: values.body*40,
+            hp_max: values.body*5,
+            hp: values.body*5
         })
     });
 });
@@ -57,16 +51,57 @@ on("clicked:recalc-sp", function(eventInfo){
     });
 });
 
-on("change:ev_sum change:gear_all_mods change:cyber_all_mods", function () {
-    getAttrs(["ev_sum", "gear_all_mods", "cyber_all_mods", "reflex"], function(values){
+on("sheet:opened change:ev_sum change:gear_all_mods change:cyber_all_mods change:ref", function () {
+    getAttrs(["ev_sum", "gear_all_mods", "cyber_all_mods", "ref"], function(values){
         let ev_sum = values.ev_sum*-1;
         let gear_mods = JSON.parse(values.gear_all_mods);
         let cyber_mods = JSON.parse(values.cyber_all_mods);
 
         setAttrs({
-            reflex_modified: values.reflex*1 + ev_sum + gear_mods.ref + cyber_mods.ref
+            ref_modified: utz(values.ref)*1 + utz(ev_sum) + utz(gear_mods.ref) + utz(cyber_mods.ref)
         })
     })
+});
+
+on("sheet:opened change:repeating_weapons", function() {
+    TAS.repeating("weapons")
+        .fields("weapon_type", "show_burst_auto")
+        .each(function(row,attrSet,id,rowSet){
+            switch (row.weapon_type) {
+                case "P":
+                case "SHT":
+                case "SNGL": row.show_burst_auto = 0; break;
+                case "SMG":
+                case "RIF":
+                case "AUTO": row.show_burst_auto = 1; break;
+            }
+        }).execute();
+});
+
+on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_cyber change:repeating_weapons", function propagateIds(){
+    TAS.repeating("armor")
+        .fields("armor_id")
+        .each(function(row,attrSet,id,rowSet){
+            row.armor_id = id;
+        }).execute();
+
+    TAS.repeating("gear")
+        .fields("gear_id")
+        .each(function(row,attrSet,id,rowSet){
+            row.gear_id = id;
+        }).execute();
+
+    TAS.repeating("cyber")
+        .fields("cyber_id")
+        .each(function(row,attrSet,id,rowSet){
+            row.cyber_id = id;
+        }).execute();
+
+    TAS.repeating("weapons")
+        .fields("weapon_id")
+        .each(function(row,attrSet,id,rowSet){
+            row.weapon_id = id;
+        }).execute();
 });
 
 on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_cyber remove:repeating_armor remove:repeating_gear remove:repeating_cyber", function calculateMods(){
@@ -77,6 +112,9 @@ on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_c
         .fields("gear_mods")
         .reduce(
             function(memo, row, attrSet, id, rowSet) {
+                if (!row.gear_mods) {
+                    return memo;
+                }
                 let mods = parseMods(row.gear_mods);
                 for(const [mod, value] of Object.entries(mods)){
                     if(!(memo.hasOwnProperty(mod))){
@@ -97,6 +135,9 @@ on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_c
         .fields("cyber_mods")
         .reduce(
             function(memo, row, attrSet, id, rowSet) {
+                if (!row.cyber_mods) {
+                    return memo;
+                }
                 let mods = parseMods(row.cyber_mods);
                 for(const [mod, value] of Object.entries(mods)){
                     if(!(memo.hasOwnProperty(mod))){
@@ -112,6 +153,15 @@ on("sheet:opened change:repeating_armor change:repeating_gear change:repeating_c
             })
         .execute();
 });
+
+//undefined to zero
+function utz(value) {
+    if(value === undefined || isNaN(value)) {
+        return 0;
+    } else {
+        return value;
+    }
+}
 
 function repAttrName(section, id, attr) {
     return "repeating_"+section+"_"+id+"_"+attr;

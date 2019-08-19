@@ -20,7 +20,7 @@
 /*----------------- GENERAL CSS ------------------*/
 
 h1 {
-    background-color: black;
+    background-color: #ee3227;
     color: white;
 }
 
@@ -28,6 +28,13 @@ textarea {
     width: 90%;
     height: 85%;
 }
+
+.sheet-section {
+    padding: 5px;
+    border-style: solid;
+    border-color: #ae3227;
+}
+
 
 .sheet-tabs {
     grid-area: tb;
@@ -88,12 +95,12 @@ input.sheet-tab {
 
 input.sheet-tab::before {
     content: attr(title);
-    border: solid 1px black;
+    border: 1px solid #ae3227;
     border-bottom-width: 2px;
     text-align: center;
     display: inline-block;
-    background: #fff;
-    background: linear-gradient(to bottom, #c8c8c8, #fff, #c8c8c8);
+    background: #ee3227;
+    color: white;
     width: 150px;
     height: 20px;
     font-size: 18px;
@@ -102,9 +109,7 @@ input.sheet-tab::before {
 }
 
 input.sheet-tab:checked::before {
-    background: #dcdcdc;
-    background: linear-gradient(to top, #fcfcfc, #dcdcdc, #fcfcfc);
-    border-bottom-color: #fff;
+    background: #ae3227;
 }
 
 div.sheet-tab-content {
@@ -112,11 +117,6 @@ div.sheet-tab-content {
     border-top-color: #000;
     margin: 0;
     padding: 0;
-}
-
-.sheet-section {
-    padding: 5px;
-    border-style: solid;
 }
 
 .sheet-flex-col {
@@ -142,7 +142,7 @@ div.sheet-tab-content {
 
 .sheet-info span {
     font-weight: bold;
-    background-color: black;
+    background-color: #ee3227;
     color: white;
 }
 
@@ -158,17 +158,18 @@ div.sheet-tab-content {
     display: grid;
     grid-gap: 4px;
     grid-template-areas:
-            "stats stats wounds"
-            "save hitbox wounds";
-    grid-template-columns: max-content max-content max-content;
+            "stats"
+            "hitbox";
+    grid-template-columns: max-content;
     grid-template-rows: max-content max-content;
 }
 
 .sheet-stats {
     grid-area: stats;
     display: grid;
-    grid-gap: 2px;
-    grid-template-columns: max-content max-content max-content max-content max-content max-content max-content max-content;
+    grid-row-gap: 2px;
+    grid-column-gap: 20px;
+    grid-template-columns: max-content max-content max-content max-content max-content max-content max-content max-content max-content max-content;
     grid-template-rows: auto auto auto auto;
     align-items: center;
     justify-items: start;
@@ -203,9 +204,6 @@ div.sheet-tab-content {
 .sheet-hitbox {
     grid-area: hitbox;
     display: grid;
-    grid-template-areas:
-        "location hitbox-table"
-        "armor-sp hitbox-table";
 }
 
 .sheet-location {
@@ -217,20 +215,7 @@ div.sheet-tab-content {
 }
 
 .sheet-hitbox-table {
-    grid-area: hitbox-table;
-    border-style: solid;
-    border-width: 1px;
-    display: grid;
-    grid-template-columns: auto auto auto auto auto auto;
-    grid-template-rows: auto auto;
-}
-
-.sheet-save {
-    display: grid;
-    grid-area: save;
-    grid-gap: 3px;
-    grid-template-areas: "save-table btm-table";
-    grid-template-columns: auto auto;
+    border: 1px solid;
 }
 
 .sheet-save-table {
@@ -255,52 +240,14 @@ div.sheet-tab-content {
 }
 
 /*----------- Wounds section -----------*/
-.sheet-wounds {
-    grid-area: wounds;
+.sheet-hp {
+    grid-area: hp;
     display: grid;
     grid-gap: 3px;
     grid-template-columns: max-content max-content max-content max-content max-content;
     grid-template-rows: max-content max-content;
 }
 
-.sheet-wounds div {
-    align-items: center;
-    justify-items: start;
-    font-weight: bold;
-}
-
-.sheet-wounds input[type="radio"] {
-    opacity: 0;
-    width: 16px;
-    height: 16px;
-    position: relative;
-    top: 5px;
-    left: 6px;
-    margin: -10px;
-    cursor: pointer;
-    z-index: 1;
-}
-
-/* Fake radio */
-.sheet-wounds input[type="radio"] + span::before {
-    margin-right: 0;
-    border: solid 1px #a8a8a8;
-    line-height: 14px;
-    text-align: center;
-    display: inline-block;
-    vertical-align: middle;
-    box-shadow: 0 0 2px #ccc;
-    background: white;
-    content: " ";
-    width: 10px;
-    height: 15px;
-    font-size: 24px;
-}
-
-.sheet-wounds input[type="radio"]:checked + span::before {
-    background: red;
-    content: " ";
-}
 /* ------- Armor ------ */
 .sheet-armor {
     grid-area: armor;
@@ -360,7 +307,6 @@ input.sheet-skills-tab:checked ~ div.sheet-skills-tab {
 
 button[type="roll"].sheet-roll-btn, button[type="action"] {
     background-color: transparent;
-    color: black;
     border: none;
     font-size: 12px!important;
     line-height: 12px;
@@ -370,10 +316,8 @@ button[type="roll"].sheet-roll-btn, button[type="action"] {
     padding: 0px;
     margin: 0px;
     width: 100%;
-}
-
-button[type="action"] {
     font-weight: bold;
+    color: #ae3227;
 }
 
 button[type="roll"].sheet-roll-btn:focus, button[type="action"]:focus {
@@ -382,7 +326,30 @@ button[type="roll"].sheet-roll-btn:focus, button[type="action"]:focus {
 
 
 button[type="roll"]:hover, button[type="action"]:hover {
-    color: red;
+    color: #ee3227;
+}
+
+button[type="roll"].sheet-single-shot:before {
+    font-family: "Pictos Custom";
+    content: "t";
+}
+
+button[type="roll"].sheet-burst:before {
+    font-family: "Pictos Custom";
+    content: "ttt";
+}
+
+button[type="roll"].sheet-auto-fire:before {
+    font-family: "Pictos";
+    content: "`";
+}
+
+input.sheet-hide-burst-auto:checked ~ button.sheet-burst, input.sheet-hide-burst-auto:checked ~ button.sheet-auto-fire {
+    display: none;
+}
+
+input.sheet-show-burst-auto:checked ~ button.sheet-burst, input.sheet-show-burst-auto:checked ~ button.sheet-auto-fire {
+    display: inline;
 }
 
 
