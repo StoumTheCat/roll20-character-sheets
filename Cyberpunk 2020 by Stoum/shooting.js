@@ -6,49 +6,62 @@ on("chat:message", function(msg) {
         args = args.slice(1, args.length);
         log(args);
         let charName = args[0];
-        let id = args[1];
+        let weaponId = args[1];
         let weaponName = args[2];
         let shotType = args[3];
         let character = findObjs({ type: 'character', name: charName })[0];
         log(character);
+        let shots = findObjs({type: "attribute", _characterid: character.id, name: `repeating_weapons_${weaponId}_weapon_shots`}, {caseInsensitive: true})[0];
         switch (shotType) {
             case "single":
-                let shots = findObjs({type: "attribute", _characterid: character.id, name: `repeating_weapons_${id}_weapon_shots`}, {caseInsensitive: true})[0];
-                log(shots);
                 if(shots.get("current") <= 0) {
-                    rollTemplate = rollTemplate.concat(`{{name=Clip of ${weaponName} is empty}}`,"{{Action = Reload button}}");
+                    rollTemplate = rollTemplate.concat(`{{name=Clip of ${weaponName} is empty}}`,`{{Action = [Reload](!reload!!${charName}!!${weaponId})}}`);
                     break;
                 }
                 shots.set("current", shots.get("current") - 1);
 
                 rollTemplate = rollTemplate.concat(
                     `{{name=Single shot from ${weaponName}}} `,
-                    `{{attack=[[1d10 + @{${charName}|ref_modified} + @{${charName}|marksmanship} + @{${charName}|repeating_weapons_${id}_weapon_accuracy}]]}} `,
-                    `{{damage=[[@{${charName}|repeating_weapons_${id}_weapon_damage}]]}} `,
+                    `{{attack=[[1d10 + @{${charName}|ref_modified} + @{${charName}|marksmanship} + @{${charName}|repeating_weapons_${weaponId}_weapon_accuracy}]]}} `,
+                    `{{damage=[[@{${charName}|repeating_weapons_${weaponId}_weapon_damage}]]}} `,
                     "{{location=[[1t[Hit-Location]]]}} "
                 );
                 break;
             case "burst":
+                if(shots.get("current") <= 2) {
+                    rollTemplate = rollTemplate.concat(`{{name=Less than 3 bullets left for ${weaponName}}}`,`{{Action = [Reload](!reload!!${charName}!!${weaponId})}}`);
+                    break;
+                }
+                shots.set("current", shots.get("current") - 3);
                 rollTemplate = rollTemplate.concat(
                     `{{name=Burst from ${weaponName}}} `,
-                    `{{attack=[[1d10 + @{${charName}|ref_modified} + @{${charName}|marksmanship} + @{${charName}|repeating_weapons_${id}_weapon_accuracy}]]}} `,
-                    `{{damage=[[@{${charName}|repeating_weapons_${id}_weapon_damage}]], [[@{${charName}|repeating_weapons_${id}_weapon_damage}]], [[@{${charName}|repeating_weapons_${id}_weapon_damage}]]}} `,
+                    `{{attack=[[1d10 + @{${charName}|ref_modified} + @{${charName}|marksmanship} + @{${charName}|repeating_weapons_${weaponId}_weapon_accuracy}]]}} `,
+                    `{{damage=[[@{${charName}|repeating_weapons_${weaponId}_weapon_damage}]], [[@{${charName}|repeating_weapons_${weaponId}_weapon_damage}]], [[@{${charName}|repeating_weapons_${weaponId}_weapon_damage}]]}} `,
                     "{{location=[[1t[Hit-Location]]], [[1t[Hit-Location]]], [[1t[Hit-Location]]]}} "
                 );
                 break;
             case "auto":
                 let targets = args[4]*1;
                 let range = args[5];
-                let rof = args[6]*1;
+                let bullets = args[6]*1;
                 let toHitNumber = args[7]*1;
                 let blankSpots = targets - 1;
-                let attackMod = (range === "close" ? +1 : -1) * Math.floor(rof / 10);
-                let bulletsPerTarget = Math.floor(rof / (targets + blankSpots));
+                let attackMod = (range === "close" ? +1 : -1) * Math.floor(bullets / 10);
+                let bulletsPerTarget = Math.floor(bullets / (targets + blankSpots));
+                if(shots.get("current") < bullets) {
+                    let bulletsLeft = shots.get("current");
+                    rollTemplate = rollTemplate.concat(
+                        `{{name=Less than ${bullets} bullets left for ${weaponName}}}`,
+                        `{{Action = [Reload](!reload!!${charName}!!${weaponId})}}`,
+                        `{{Action2 = [Shoot ${bulletsLeft} bullets on auto](!shoot!!${charName}!!${weaponId}!!${weaponName}!!${shotType}!!${targets}!!${range}!!${bulletsLeft}!!${toHitNumber})}}`);
+                    break;
+                }
+                shots.set("current", shots.get("current") - bullets);
                 rollTemplate = rollTemplate.concat(`{{name=Auto fire from ${weaponName}}} `);
                 for (let i = 1; i <= targets; i++) {
                     rollTemplate = rollTemplate.concat(
                         `{{Target ${i}}} `,
-                        `{{Bullets hit ${i}=[[(1d10 + @{${charName}|ref_modified} + @{${charName}|marksmanship} + @{${charName}|repeating_weapons_${id}_weapon_accuracy} + ${attackMod})]] - [[${toHitNumber}]] (${bulletsPerTarget} max)}} `
+                        `{{Bullets hit ${i}=[[(1d10 + @{${charName}|ref_modified} + @{${charName}|marksmanship} + @{${charName}|repeating_weapons_${weaponId}_weapon_accuracy} + ${attackMod})]] - [[${toHitNumber}]] (${bulletsPerTarget} max)}} `
                     )
                 }
                 break;
@@ -58,3 +71,15 @@ on("chat:message", function(msg) {
     }
 });
 
+on("chat:message", function(msg) {
+    if (msg.type == "api" && msg.content.indexOf("!reload") !== -1) {
+        let args = msg.content.split('!!');
+        args = args.slice(1, args.length);
+        let charName = args[0];
+        let weaponId = args[1];
+        let character = findObjs({ type: 'character', name: charName })[0];
+        let shots = findObjs({type: "attribute", _characterid: character.id, name: `repeating_weapons_${weaponId}_weapon_shots`}, {caseInsensitive: true})[0];
+        let clip = findObjs({type: "attribute", _characterid: character.id, name: `repeating_weapons_${weaponId}_weapon_clip_size`}, {caseInsensitive: true})[0];
+        shots.set("current", clip.get("current"))
+    }
+});
