@@ -63,6 +63,20 @@ on("sheet:opened change:ev_sum change:gear_all_mods change:cyber_all_mods change
     })
 });
 
+on("sheet:opened change:emp_max change:repeating_cyber", function() {
+    TAS.repeatingSimpleSum("cyber", "cyber_hl", "total_humanity_loss");
+});
+
+on("change:total_humanity_loss", function () {
+    getAttrs(["total_humanity_loss", "emp_max"], function(values){
+        let hum = values.emp_max*10 - values.total_humanity_loss;
+        setAttrs({
+            humanity: hum,
+            emp: Math.ceil(hum/10)
+        })
+    })
+});
+
 on("sheet:opened change:repeating_weapons", function() {
     TAS.repeating("weapons")
         .fields("weapon_type", "show_burst_auto")
