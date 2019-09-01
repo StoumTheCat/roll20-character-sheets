@@ -80,15 +80,17 @@ on("change:total_humanity_loss", function () {
 
 on("sheet:opened change:repeating_weapons", function() {
     TAS.repeating("weapons")
-        .fields("weapon_type", "show_burst_auto")
+        .fields("weapon_type", "weapon_mode")
         .each(function(row,attrSet,id,rowSet){
             switch (row.weapon_type) {
                 case "P":
                 case "SHT":
-                case "SNGL": row.show_burst_auto = 0; break;
+                case "SNGL": row.weapon_mode = 0; break;
                 case "SMG":
                 case "RIF":
-                case "AUTO": row.show_burst_auto = 1; break;
+                case "AUTO": row.weapon_mode = 1; break;
+                case "MELEE": row.weapon_mode = 2; break;
+                case "BRAWL": row.weapon_mode = 3; break;
             }
         }).execute();
 });
@@ -861,6 +863,7 @@ var TAS = TAS || (function(){
     <div class="header-section">
         <div class="logo section">
             <h1>Cyberpunk RED</h1>
+            <button type="roll" value="/roll 1d10 + @{ref_modified} &{tracker}" class="initiative">Initiative</button>
         </div>
 
         <div class="info section">
@@ -921,7 +924,7 @@ var TAS = TAS || (function(){
                     <div><input name="attr_emp" type="number" class="merge-input-right"/><input
                             name="attr_emp_max" type="number" class="merge-input-left"/></div>
                     <span>Run</span>
-                    <div><input name="attr_run" type="number" class="merge-input-right"/><input name="attr_run_max"
+                    <div><input name="attr_run" type="number" step="any" class="merge-input-right"/><input name="attr_run_max"
                                                                                                 type="number"
                                                                                                 class="merge-input-left"
                                                                                                 readonly/>
@@ -994,20 +997,30 @@ var TAS = TAS || (function(){
                                 <option value="SHT">Shotgun</option>
                                 <option value="SNGL">Single</option>
                                 <option value="AUTO">Auto</option>
+                                <option value="MELEE">Melee</option>
+                                <option value="BRAWL">Brawling</option>
                             </select>
                             <input type="number" name="attr_weapon_accuracy" placeholder="WA"/>
                             <input type="text" name="attr_weapon_damage" placeholder="Damage" style="width: 60px;"/>
                             <input type="number" name="attr_weapon_shots" placeholder="#SHOTS" style="width: 60px;"/>
+                            <input type="radio" style="display:none;" name="attr_weapon_mode" class="hide-burst-auto" value="0" checked/>
+                            <input type="radio" style="display:none;" name="attr_weapon_mode" class="show-burst-auto" value="1"/>
+                            <input type="radio" style="display:none;" name="attr_weapon_mode" class="show-melee" value="2"/>
+                            <input type="radio" style="display:none;" name="attr_weapon_mode" class="show-brawling" value="3"/>
                             <button name="roll_single_shot" type="roll" class="single-shot"
-                                    value="!shoot!!@{character_name}!!@{weapon_id}!!@{weapon_name}!!single">
+                                    value="!shoot!!@{character_name}!!@{target|character_name}!!@{weapon_id}!!@{weapon_name}!!single">
                             </button>
-                            <input type="radio" style="display:none;" name="attr_show_burst_auto" class="hide-burst-auto" value="0" checked/>
-                            <input type="radio" style="display:none;" name="attr_show_burst_auto" class="show-burst-auto" value="1"/>
+                            <button name="roll_melee_attack" type="roll" class="melee-attack"
+                                    value="&{template:default}{{name=Melee attack with @{weapon_name}}}{{attack=[[1d10 + @{dex} + @{meleeweapon}]]}}{{damage=[[@{weapon_damage}]]}}{{location=[[1t[Hit-Location]]]}}">
+                            </button>
+                            <button name="roll_brawling_attack" type="roll" class="brawling-attack"
+                                    value="&{template:default}{{name=Brawling attack with @{weapon_name}}}{{attack=[[1d10 + @{dex} + @{brawling}]]}}{{damage=[[@{weapon_damage}]]}}{{location=[[1t[Hit-Location]]]}}">
+                            </button>
                             <button name="roll_burst" type="roll" class="burst"
-                                    value="!shoot!!@{character_name}!!@{weapon_id}!!@{weapon_name}!!burst">
+                                    value="!shoot!!@{character_name}!!@{target|character_name}!!@{weapon_id}!!@{weapon_name}!!burst">
                             </button>
                             <button name="roll_auto_fire" type="roll" class="auto-fire"
-                                    value="!shoot!!@{character_name}!!@{weapon_id}!!@{weapon_name}!!auto!!?{Number of targets}!!?{Range}!!@{weapon_rof}!!?{Hit number}">
+                                    value="!shoot!!@{character_name}!!@{target|character_name}!!@{weapon_id}!!@{weapon_name}!!auto!!?{Number of targets}!!?{Range}!!@{weapon_rof}!!?{Hit number}">
                             </button>
                         </div>
                         <div class="options">
@@ -1087,7 +1100,7 @@ var TAS = TAS || (function(){
                     <div class="skill-row" style="font-weight: bold;">DEX</div>
                     <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Brawling Check}} {{Check=[[1d10 + @{dex} + @{Brawling}]]}}' class='roll-btn'>Brawling</button></div><div><input type='number' class='skill-input' name='attr_Brawling'/></div><div><input type='number' class='skill-ip' name='attr_Brawling_ip'></div><input type='hidden' name='attr_Brawling_uses'></div>
                     <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Evasion Check}} {{Check=[[1d10 + @{dex} + @{Evasion}]]}}' class='roll-btn'>Evasion</button></div><div><input type='number' class='skill-input' name='attr_Evasion'/></div><div><input type='number' class='skill-ip' name='attr_Evasion_ip'></div><input type='hidden' name='attr_Evasion_uses'></div>
-                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Melee Weapon Check}} {{Check=[[1d10 + @{dex} + @{Melee Weapon}]]}}' class='roll-btn'>Melee Weapon</button></div><div><input type='number' class='skill-input' name='attr_Melee Weapon'/></div><div><input type='number' class='skill-ip' name='attr_Melee Weapon_ip'></div><input type='hidden' name='attr_Melee Weapon_uses'></div>
+                    <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Melee Weapon Check}} {{Check=[[1d10 + @{dex} + @{MeleeWeapon}]]}}' class='roll-btn'>Melee Weapon</button></div><div><input type='number' class='skill-input' name='attr_MeleeWeapon'/></div><div><input type='number' class='skill-ip' name='attr_Melee Weapon_ip'></div><input type='hidden' name='attr_Melee Weapon_uses'></div>
                     <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Athletics Check}} {{Check=[[1d10 + @{dex} + @{Athletics}]]}}' class='roll-btn'>Athletics</button></div><div><input type='number' class='skill-input' name='attr_Athletics'/></div><div><input type='number' class='skill-ip' name='attr_Athletics_ip'></div><input type='hidden' name='attr_Athletics_uses'></div>
                     <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Fencing Check}} {{Check=[[1d10 + @{dex} + @{Fencing}]]}}' class='roll-btn'>Fencing</button></div><div><input type='number' class='skill-input' name='attr_Fencing'/></div><div><input type='number' class='skill-ip' name='attr_Fencing_ip'></div><input type='hidden' name='attr_Fencing_uses'></div>
                     <div class='skill-row'><div><button type='roll' value='&{template:default} {{name=Stealth Check}} {{Check=[[1d10 + @{dex} + @{Stealth}]]}}' class='roll-btn'>Stealth</button></div><div><input type='number' class='skill-input' name='attr_Stealth'/></div><div><input type='number' class='skill-ip' name='attr_Stealth_ip'></div><input type='hidden' name='attr_Stealth_uses'></div>

@@ -79,15 +79,17 @@ on("change:total_humanity_loss", function () {
 
 on("sheet:opened change:repeating_weapons", function() {
     TAS.repeating("weapons")
-        .fields("weapon_type", "show_burst_auto")
+        .fields("weapon_type", "weapon_mode")
         .each(function(row,attrSet,id,rowSet){
             switch (row.weapon_type) {
                 case "P":
                 case "SHT":
-                case "SNGL": row.show_burst_auto = 0; break;
+                case "SNGL": row.weapon_mode = 0; break;
                 case "SMG":
                 case "RIF":
-                case "AUTO": row.show_burst_auto = 1; break;
+                case "AUTO": row.weapon_mode = 1; break;
+                case "MELEE": row.weapon_mode = 2; break;
+                case "BRAWL": row.weapon_mode = 3; break;
             }
         }).execute();
 });

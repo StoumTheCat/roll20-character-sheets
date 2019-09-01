@@ -329,7 +329,7 @@ button[type="roll"]:hover, button[type="action"]:hover {
     color: #ee3227;
 }
 
-button[type="roll"].sheet-single-shot:before {
+button[type="roll"].sheet-single-shot:before, button[type="roll"].sheet-melee-attack:before, button[type="roll"].sheet-brawling-attack:before {
     font-family: "Pictos Custom";
     content: "t";
 }
@@ -344,11 +344,42 @@ button[type="roll"].sheet-auto-fire:before {
     content: "`";
 }
 
-input.sheet-hide-burst-auto:checked ~ button.sheet-burst, input.sheet-hide-burst-auto:checked ~ button.sheet-auto-fire {
+input.sheet-hide-burst-auto:checked ~ button.sheet-burst,
+input.sheet-hide-burst-auto:checked ~ button.sheet-auto-fire,
+input.sheet-hide-burst-auto:checked ~ button.sheet-melee-attack,
+input.sheet-hide-burst-auto:checked ~ button.sheet-brawling-attack{
     display: none;
 }
 
-input.sheet-show-burst-auto:checked ~ button.sheet-burst, input.sheet-show-burst-auto:checked ~ button.sheet-auto-fire {
+input.sheet-show-burst-auto:checked ~ button.sheet-melee-attack,
+input.sheet-show-burst-auto:checked ~ button.sheet-brawling-attack{
+    display: none;
+}
+
+input.sheet-show-melee:checked ~ button.sheet-burst,
+input.sheet-show-melee:checked ~ button.sheet-auto-fire,
+input.sheet-show-melee:checked ~ button.sheet-single-shot,
+input.sheet-show-melee:checked ~ button.sheet-brawling-attack{
+    display: none;
+}
+
+input.sheet-show-melee:checked ~ button.sheet-melee-attack{
+    display: inline;
+}
+
+input.sheet-show-brawling:checked ~ button.sheet-burst,
+input.sheet-show-brawling:checked ~ button.sheet-auto-fire,
+input.sheet-show-brawling:checked ~ button.sheet-single-shot,
+input.sheet-show-brawling:checked ~ button.sheet-melee-attack{
+    display: none;
+}
+
+input.sheet-show-brawling:checked ~ button.sheet-brawling-attack{
+    display: inline;
+}
+
+input.sheet-show-burst-auto:checked ~ button.sheet-burst,
+input.sheet-show-burst-auto:checked ~ button.sheet-auto-fire {
     display: inline;
 }
 
